@@ -1,0 +1,41 @@
+name: Deploy lên Cloudflare Pages
+
+# Mỗi lần đẩy code lên nhánh master, tự build và deploy.
+# Không cần Cloudflare có quyền truy cập GitHub.
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch: # cho phép bấm chạy tay từ tab Actions
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+
+    steps:
+      - name: Lấy mã nguồn
+        uses: actions/checkout@v4
+
+      - name: Cài Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Cài thư viện
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          PUBLIC_SITE: https://thokieuoanh.pages.dev
+
+      - name: Deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=thokieuoanh --branch=master
