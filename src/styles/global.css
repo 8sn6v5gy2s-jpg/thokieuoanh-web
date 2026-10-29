@@ -144,8 +144,37 @@ a:hover { color: var(--moss); text-decoration-color: var(--moss); }
 main { flex: 1; }
 
 /* ---------- Header ---------- */
+/* Header trôi theo trang: cuộn xuống thì trượt lên mất, cuộn lên thì hiện lại.
+   Chỉ gắn class .is-stuck khi đã cuộn qua khỏi vị trí đầu, để ở đầu trang
+   header vẫn nằm trong dòng chảy thường (không đè lên nội dung). */
 .site-header {
   padding-block: var(--s-5) var(--s-4);
+  transition: transform 320ms cubic-bezier(0.22, 0.61, 0.36, 1), box-shadow 320ms ease;
+  will-change: transform;
+}
+.site-header.is-stuck {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline: 0;
+  z-index: 40;
+  padding-block: var(--s-3);
+  background: color-mix(in srgb, var(--paper) 92%, transparent);
+  backdrop-filter: saturate(140%) blur(10px);
+  -webkit-backdrop-filter: saturate(140%) blur(10px);
+  box-shadow: 0 1px 0 var(--rule), 0 6px 24px -18px rgba(43, 38, 32, 0.5);
+}
+.site-header.is-offscreen {
+  transform: translateY(-105%);
+}
+/* chừa chỗ khi header đã rời dòng chảy */
+.site-header__spacer {
+  display: none;
+}
+.site-header__spacer.is-on {
+  display: block;
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-header { transition: none; }
 }
 .site-header__inner {
   display: flex;

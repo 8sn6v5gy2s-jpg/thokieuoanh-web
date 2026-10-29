@@ -147,6 +147,7 @@ const navItems = [
         </nav>
       </div>
     </header>
+    <div class="site-header__spacer" data-header-spacer aria-hidden="true"></div>
 
     <main id="main">
       <slot />
@@ -189,6 +190,90 @@ const navItems = [
     </dialog>
 
     <script>
+      // ---- Header tự ẩn khi cuộn xuống, hiện khi cuộn lên ----
+      // Quy tắc: cuộn xuống quá 8px thì ẩn; cuộn lên quá 8px thì hiện.
+      // Ngưỡng 8px tránh rung giật khi ngón tay rít nhẹ. Ở sát đầu trang
+      // luôn hiện, để mẹ không bị mất lối về trang chủ.
+      (() => {
+        const header = document.querySelector<HTMLElement>('.site-header');
+        const spacer = document.querySelector<HTMLElement>('[data-header-spacer]');
+        if (!header || !spacer) return;
+
+        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+        let lastY = window.scrollY;
+        let stuck = false;
+        let ticking = false;
+
+        let baseH = header.offsetHeight; // chiều cao lúc còn ở đầu trang
+
+        const setStuck = (on: boolean) => {
+          if (on === stuck) return;
+          stuck = on;
+          header.classList.toggle('is-stuck', on);
+          spacer.classList.toggle('is-on', on);
+          // Chừa đúng chiều cao BAN ĐẦU của header, không phải chiều cao
+          // lúc đã co lại — nếu lấy chiều cao đang co, cả trang tụt lên
+          // 24px mỗi lần header tách ra.
+          spacer.style.blockSize = on ? `${baseH}px` : '';
+        };
+
+        const update = () => {
+          const y = window.scrollY;
+          const dy = y - lastY;
+          const headerH = header.offsetHeight;
+
+          // qua khỏi header gốc thì mới tách ra thành thanh nổi
+          setStuck(y > headerH + 24);
+
+          if (stuck) {
+            if (reduced.matches) {
+              // giảm chuyển động: chỉ ẩn/hiện tức thời, vẫn giữ hành vi
+              header.classList.toggle('is-offscreen', dy > 8);
+            } else if (y < 120) {
+              header.classList.remove('is-offscreen');
+            } else if (dy > 8) {
+              header.classList.add('is-offscreen');
+            } else if (dy < -8) {
+              header.classList.remove('is-offscreen');
+            }
+          } else {
+            header.classList.remove('is-offscreen');
+          }
+
+          lastY = y;
+          ticking = false;
+        };
+
+        const onScroll = () => {
+          if (ticking) return;
+          ticking = true;
+          requestAnimationFrame(update);
+        };
+
+        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', () => {
+          // đổi khổ màn thì chiều cao gốc đổi theo; đo lại khi đang ở đầu trang
+          if (!stuck) {
+            baseH = header.offsetHeight;
+          } else {
+            spacer.style.blockSize = `${baseH}px`;
+          }
+          onScroll();
+        }, { passive: true });
+
+        // mở menu điện thoại thì luôn kéo header xuống, kẻo panel bị cắt
+        document.querySelector('[data-menu-btn]')?.addEventListener('click', () => {
+          header.classList.remove('is-offscreen');
+        });
+
+        // bàn phím: focus vào một mục trong nav thì header phải nhìn thấy được
+        document.querySelector('[data-nav]')?.addEventListener('focusin', () => {
+          header.classList.remove('is-offscreen');
+        });
+
+        update();
+      })();
+
       // ---- Menu điện thoại ----
       // Trước đây dùng <details>: trên desktop nav bị kẹt ở 0px vì trình
       // duyệt vẫn ẩn nội dung <details> chưa mở, kể cả khi .menu đặt
