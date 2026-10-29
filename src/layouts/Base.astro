@@ -119,34 +119,32 @@ const navItems = [
           Kiều Oanh
           <small>thơ</small>
         </a>
-        <details class="menu" data-menu>
-          <summary class="menu__btn" aria-label="Mở menu">
-            <span class="menu__lines" aria-hidden="true">
-              <span></span>
-              <span></span>
-              <span></span>
-            </span>
-          </summary>
-          <nav class="nav" aria-label="Điều hướng chính">
-            {
-              navItems.map((item) => (
-                <a
-                  href={item.href}
-                  aria-current={
-                    (item.href === '/' ? current === '/' : current.startsWith(item.href.replace(/\/$/, '')))
-                      ? 'page'
-                      : undefined
-                  }
-                >
-                  {item.label}
-                </a>
-              ))
-            }
-            <button class="search-toggle" type="button" data-search-open aria-haspopup="dialog">
-              Tìm
-            </button>
-          </nav>
-        </details>
+        <button class="menu__btn" type="button" data-menu-btn aria-label="Mở menu" aria-expanded="false" aria-controls="main-nav">
+          <span class="menu__lines" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+          </span>
+        </button>
+        <nav class="nav" id="main-nav" aria-label="Điều hướng chính" data-nav>
+          {
+            navItems.map((item) => (
+              <a
+                href={item.href}
+                aria-current={
+                  (item.href === '/' ? current === '/' : current.startsWith(item.href.replace(/\/$/, '')))
+                    ? 'page'
+                    : undefined
+                }
+              >
+                {item.label}
+              </a>
+            ))
+          }
+          <button class="search-toggle" type="button" data-search-open aria-haspopup="dialog">
+            Tìm
+          </button>
+        </nav>
       </div>
     </header>
 
@@ -192,19 +190,38 @@ const navItems = [
 
     <script>
       // ---- Menu điện thoại ----
-      const menu = document.querySelector<HTMLDetailsElement>('[data-menu]');
-      menu?.addEventListener('click', (e) => {
-        const target = e.target as HTMLElement;
-        if (target.closest('a')) menu.open = false;
+      // Trước đây dùng <details>: trên desktop nav bị kẹt ở 0px vì trình
+      // duyệt vẫn ẩn nội dung <details> chưa mở, kể cả khi .menu đặt
+      // display: contents. Nay dùng <button> + class, không có gì ẩn ngầm.
+      const menuBtn = document.querySelector<HTMLButtonElement>('[data-menu-btn]');
+      const nav = document.querySelector<HTMLElement>('[data-nav]');
+
+      const setMenu = (open: boolean) => {
+        if (!nav || !menuBtn) return;
+        nav.toggleAttribute('data-open', open);
+        menuBtn.setAttribute('aria-expanded', String(open));
+        menuBtn.setAttribute('aria-label', open ? 'Đóng menu' : 'Mở menu');
+      };
+
+      menuBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        setMenu(!nav?.hasAttribute('data-open'));
       });
-      // Bấm ra ngoài hoặc nhấn Esc thì đóng menu
+
+      // Chọn một mục là đóng menu
+      nav?.addEventListener('click', (e) => {
+        if ((e.target as HTMLElement).closest('a')) setMenu(false);
+      });
+
+      // Bấm ra ngoài thì đóng
       document.addEventListener('click', (e) => {
-        if (menu?.open && !menu.contains(e.target as Node)) menu.open = false;
+        if (nav?.hasAttribute('data-open') && !nav.contains(e.target as Node)) setMenu(false);
       });
+
       document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && menu?.open) {
-          menu.open = false;
-          menu.querySelector<HTMLElement>('summary')?.focus();
+        if (e.key === 'Escape' && nav?.hasAttribute('data-open')) {
+          setMenu(false);
+          menuBtn?.focus();
         }
       });
 

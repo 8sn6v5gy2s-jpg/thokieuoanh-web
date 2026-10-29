@@ -175,8 +175,8 @@ main { flex: 1; }
 }
 
 /* ---------- Menu ---------- */
-.menu { display: contents; }
-.menu > .menu__btn { display: none; }
+/* Nút hamburger chỉ hiện trên màn hẹp. Desktop dùng nav ngang. */
+.menu__btn { display: none; }
 .menu__lines { display: block; }
 .menu__lines span {
   display: block;
@@ -720,31 +720,32 @@ main { flex: 1; }
   .brand { font-size: 1.05rem; }
 
   /* hamburger */
-  .menu { position: relative; display: block; margin-left: auto; }
-  .menu > .menu__btn {
+  .site-header__inner { position: relative; }
+  .menu__btn {
     display: flex;
     align-items: center;
     justify-content: center;
     width: 44px;
     height: 44px;
+    margin-left: auto;
     margin-right: -10px;
+    padding: 0;
+    background: none;
+    border: 0;
     cursor: pointer;
-    list-style: none;
     -webkit-tap-highlight-color: transparent;
   }
-  .menu__btn::-webkit-details-marker { display: none; }
-  .menu__btn::marker { content: ''; }
-  .menu[open] .menu__lines span:nth-child(1) { transform: translateY(5.5px) rotate(45deg); }
-  .menu[open] .menu__lines span:nth-child(2) { opacity: 0; }
-  .menu[open] .menu__lines span:nth-child(3) { transform: translateY(-5.5px) rotate(-45deg); }
+  .menu__btn[aria-expanded='true'] .menu__lines span:nth-child(1) { transform: translateY(5.5px) rotate(45deg); }
+  .menu__btn[aria-expanded='true'] .menu__lines span:nth-child(2) { opacity: 0; }
+  .menu__btn[aria-expanded='true'] .menu__lines span:nth-child(3) { transform: translateY(-5.5px) rotate(-45deg); }
 
-  /* panel */
-  .menu .nav {
+  /* panel — chỉ hiện khi bấm nút */
+  .nav {
     position: absolute;
     right: 0;
     top: calc(100% + 0.5rem);
     z-index: 20;
-    display: flex;
+    display: none;
     flex-direction: column;
     align-items: stretch;
     gap: 0;
@@ -755,15 +756,16 @@ main { flex: 1; }
     border: 1px solid var(--rule);
     box-shadow: 0 10px 26px -18px color-mix(in srgb, var(--ink) 55%, transparent);
   }
-  .menu .nav a,
-  .menu .nav .search-toggle {
+  .nav[data-open] { display: flex; }
+  .nav a,
+  .nav .search-toggle {
     padding: 0.7rem 1.1rem;
     border-bottom: none;
     text-align: left;
     white-space: nowrap;
   }
-  .menu .nav .search-toggle { border-top: 1px solid var(--rule); margin-top: 0.3rem; padding-top: 0.8rem; }
-  .menu .nav a[aria-current='page'] { color: var(--ink); font-weight: 500; }
+  .nav .search-toggle { border-top: 1px solid var(--rule); margin-top: 0.3rem; padding-top: 0.8rem; }
+  .nav a[aria-current='page'] { color: var(--ink); font-weight: 500; }
 
   .hero { padding-block: 1.5rem var(--s-5); }
   /* Màn hẹp: chữ nhỏ lại để câu thơ 8-10 chữ vừa một dòng.
