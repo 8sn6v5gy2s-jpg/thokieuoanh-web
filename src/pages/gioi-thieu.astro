@@ -1,0 +1,196 @@
+---
+import Base from '../layouts/Base.astro';
+import Ink from '../components/Ink.astro';
+import { getPoems, formatDate, collectTags } from '../lib/poems';
+
+const poems = await getPoems();
+const allTags = collectTags(poems);
+const first = poems.length ? poems[poems.length - 1].data.date : null;
+const latest = poems.length ? poems[0].data.date : null;
+const topics = ['Mùa thu', 'Mùa xuân', 'Hoa', 'Gia đình', 'Bình yên']
+  .filter((t) => allTags.some((x) => x.name === t));
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+
+<Base
+  title="Đôi điều"
+  description="Đôi điều về Kiều Oanh, và về những bài thơ ở đây."
+  current="/gioi-thieu/"
+>
+  <article class="wrap wrap--narrow about">
+    <header class="page-head" style="padding-top: var(--s-6);">
+      <p class="eyebrow">Đôi điều</p>
+      <h1 class="page-head__title">Kiều Oanh</h1>
+      <p class="page-head__lede">
+        Tôi viết thơ từ lâu rồi, gần như không để ai đọc. Đây là lần đầu gom lại.
+      </p>
+    </header>
+
+    <figure class="about__portrait">
+      <img
+        src={`${BASE}/images/kieuoanh-portrait.jpg`}
+        alt="Kiều Oanh đứng dưới giàn hoa giấy trước hiên nhà"
+        width="900"
+        height="1194"
+        loading="eager"
+        decoding="async"
+      />
+    </figure>
+
+    <div class="about__body">
+      <p>Tôi viết thơ đã mấy chục năm, chẳng để làm gì, chỉ viết.</p>
+
+      <p>
+        Trên đường đi chơi xa thì viết. Sáng ngồi ngắm hoa ngoài hiên thì viết.
+        Hôm nào trời trở gió cũng viết. Thơ không hẹn trước, nên không bài nào
+        giống bài nào.
+      </p>
+
+      <p>
+        Có bài viết vì một người bạn lâu năm gặp lại. Có bài chỉ để chúc nhau một
+        ngày lễ. Có bài viết cho cháu, cho con, cho chính mình lúc ngồi nhìn tờ
+        lịch cuối năm.
+      </p>
+
+      <p>
+        Tôi không viết để in. Thơ nằm trong điện thoại, trong sổ tay, trong những
+        dòng đăng lên rồi để đó. Đây là lần đầu chúng được gom lại một chỗ, có
+        ngày tháng, có thứ tự, để ai muốn đọc thì đọc.
+      </p>
+    </div>
+
+    <div class="rule-ornament" aria-hidden="true">
+      <Ink name="flower" width={20} />
+    </div>
+
+    <dl class="about__facts">
+      <div>
+        <dt>Số bài</dt>
+        <dd>{poems.length}</dd>
+      </div>
+      {
+        first && latest && (
+          <div>
+            <dt>Khoảng thời gian</dt>
+            <dd>
+              {formatDate(first)} — {formatDate(latest)}
+            </dd>
+          </div>
+        )
+      }
+      {
+        topics.length > 0 && (
+          <div>
+            <dt>Chủ đề</dt>
+            <dd class="about__fact-tags">
+              {topics.map((t) => (
+                <span>{t}</span>
+              ))}
+            </dd>
+          </div>
+        )
+      }
+    </dl>
+
+    <p class="about__closing">
+      Cảm ơn bạn đã ghé qua trang thơ của Kiều Oanh giữa bộn bề cuộc sống. Mong
+      bạn có những phút giây yên bình.
+    </p>
+  </article>
+</Base>
+
+<style>
+  .about__portrait {
+    margin: var(--s-5) 0 var(--s-6);
+    position: relative;
+  }
+  .about__portrait img {
+    width: 100%;
+    height: auto;
+    border-radius: 2px;
+    box-shadow:
+      0 1px 2px rgba(43, 38, 32, 0.08),
+      0 12px 32px -18px rgba(43, 38, 32, 0.3);
+  }
+  .about__portrait::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: 2px;
+    box-shadow: inset 0 0 0 1px rgba(43, 38, 32, 0.06);
+  }
+
+  .about__body p {
+    margin-bottom: 1.5em;
+    color: var(--ink);
+    font-size: clamp(1.05rem, 1rem + 0.2vw, 1.16rem);
+    line-height: 1.95;
+  }
+  /* câu mở đầu đứng riêng, như một lời ngỏ */
+  .about__body p:first-child {
+    font-size: clamp(1.2rem, 1rem + 0.6vw, 1.42rem);
+    font-style: italic;
+    color: var(--ink-soft);
+    line-height: 1.7;
+    margin-bottom: 1.4em;
+  }
+
+  .about__facts {
+    margin-top: var(--s-6);
+    border-top: 1px solid var(--rule);
+  }
+  .about__facts > div {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1.5rem;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .about__facts dt {
+    font-family: var(--sans);
+    font-size: var(--step--1);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    white-space: nowrap;
+  }
+  .about__facts dd {
+    margin: 0;
+    color: var(--ink);
+    text-align: right;
+  }
+  .about__fact-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem 0.7rem;
+    justify-content: flex-end;
+    font-size: var(--step--1);
+    color: var(--moss-deep);
+  }
+
+  .about__closing {
+    margin-top: var(--s-6);
+    padding-top: var(--s-4);
+    border-top: 1px solid var(--rule);
+    font-style: italic;
+    font-size: var(--step-0);
+    color: var(--ink-soft);
+    text-align: center;
+    line-height: 1.9;
+    text-wrap: balance;
+  }
+
+  @media (max-width: 40rem) {
+    .about__facts > div {
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+    .about__facts dd,
+    .about__fact-tags {
+      text-align: left;
+      justify-content: flex-start;
+    }
+  }
+</style>

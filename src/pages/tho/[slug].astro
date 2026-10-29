@@ -1,0 +1,126 @@
+---
+import Base from '../../layouts/Base.astro';
+import Ink from '../../components/Ink.astro';
+import {
+  getPoems,
+  slugOf,
+  formatDate,
+  tagSlug,
+  metaDescriptionOf,
+} from '../../lib/poems';
+
+export async function getStaticPaths() {
+  const poems = await getPoems();
+  return poems.map((poem, i) => ({
+    params: { slug: slugOf(poem) },
+    props: {
+      poem,
+      prev: poems[i + 1] ?? null,
+      next: poems[i - 1] ?? null,
+    },
+  }));
+}
+
+const { poem, prev, next } = Astro.props;
+const body = (poem.body ?? '').trim();
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
+const siteUrl = (Astro.site ?? new URL('https://thokieuoanh.com')).origin;
+const poemUrl = `${siteUrl}/tho/${slugOf(poem)}/`;
+
+// Poem schema — Google đọc được tựa, tác giả, ngày đăng, chủ đề.
+// Tự sinh từ frontmatter nên bài mới không cần thêm gì.
+const poemSchema = {
+  '@type': 'Poem',
+  '@id': `${poemUrl}#poem`,
+  name: poem.data.title,
+  headline: poem.data.title,
+  url: poemUrl,
+  datePublished: poem.data.date.toISOString().slice(0, 10),
+  inLanguage: 'vi',
+  author: { '@id': `${siteUrl}/#person` },
+  isPartOf: { '@id': `${siteUrl}/#website` },
+  ...(poem.data.tags.length ? { keywords: poem.data.tags.join(', '), about: poem.data.tags.map((t) => ({ '@type': 'Thing', name: t })) } : {}),
+  ...(poem.data.excerpt ? { description: poem.data.excerpt.trim() } : {}),
+};
+---
+
+<Base
+  title={poem.data.title}
+  description={metaDescriptionOf(poem)}
+  current="/tho/"
+  ogType="article"
+  schema={poemSchema}
+>
+  <article class="poem-page wrap" data-pagefind-body data-pagefind-filter="section:tho">
+    <header class="poem-page__header reveal">
+      <h1 class="poem-page__title">{poem.data.title}</h1>
+      <p class="poem-page__meta">
+        <time datetime={poem.data.date.toISOString()}>{formatDate(poem.data.date)}</time>
+      </p>
+      {/*
+        Chỉnh cỡ chữ — kiểu A (A− / A+).
+        Đặt ngay dưới ngày đăng, trước bài thơ: chỗ mắt gặp đầu tiên.
+        Cỡ đã chọn lưu vào localStorage nên mở bài khác vẫn giữ.
+        Không hiện khi in (print) và không tính vào Pagefind.
+      */}
+      <div class="font-ctl" data-font-ctl data-pagefind-ignore>
+        <button type="button" data-font-step="-1" aria-label="Chữ nhỏ hơn">A−</button>
+        <span class="font-ctl__state" data-font-state aria-live="polite">vừa</span>
+        <button type="button" data-font-step="1" aria-label="Chữ lớn hơn">A+</button>
+      </div>
+    </header>
+
+    <div class="poem-page__body reveal" style="animation-delay: 80ms">{body}</div>
+
+    {
+      poem.data.tags.length > 0 && (
+        <ul class="tag-list poem-page__tags">
+          {poem.data.tags.map((t) => (
+            <li>
+              <a class="tag" href={`${BASE}/chu-de/${tagSlug(t)}/`}>
+                {t}
+              </a>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+
+    <div class="rule-ornament" aria-hidden="true">
+      <Ink name="flower" width={20} />
+    </div>
+
+    <nav class="poem-nav" aria-label="Bài trước và bài sau">
+      {prev ? <a href={`${BASE}/tho/${slugOf(prev)}/`}>← {prev.data.title}</a> : <span></span>}
+      {next ? <a href={`${BASE}/tho/${slugOf(next)}/`}>{next.data.title} →</a> : <span></span>}
+    </nav>
+
+    <p style="text-align: center; margin-top: var(--s-5);">
+      <a href={`${BASE}/tho/`} style="font-size: var(--step--1); letter-spacing: 0.06em;">Về kho thơ</a>
+    </p>
+  </article>
+</Base>
+
+<style>
+  .poem-nav {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--s-4);
+    padding-top: var(--s-4);
+    border-top: 1px solid var(--rule);
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+  }
+  .poem-nav a {
+    text-decoration: none;
+    max-width: 45%;
+    color: var(--ink-soft);
+  }
+  .poem-nav a:last-child {
+    text-align: right;
+    margin-left: auto;
+  }
+  .poem-nav a:hover {
+    color: var(--moss-deep);
+  }
+</style>

@@ -1,0 +1,15 @@
+---
+import { slugOf, excerptOf, formatDate } from '../lib/poems';
+
+const { poem, delay = 0 } = Astro.props;
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
+const url = `${BASE}/tho/${slugOf(poem)}/`;
+---
+
+<li class="poem-card reveal" style={delay ? `animation-delay:${delay}ms` : undefined}>
+  <a class="poem-card__link" href={url}>
+    <h3 class="poem-card__title">{poem.data.title}</h3>
+    <p class="poem-card__excerpt">{excerptOf(poem)}</p>
+    <p class="poem-card__meta">{formatDate(poem.data.date)}</p>
+  </a>
+</li>

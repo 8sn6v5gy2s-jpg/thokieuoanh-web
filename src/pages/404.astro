@@ -1,0 +1,22 @@
+---
+import Base from '../layouts/Base.astro';
+import Ink from '../components/Ink.astro';
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+
+<Base title="Không tìm thấy" description="Trang này không tồn tại.">
+  <div class="wrap wrap--narrow" style="text-align: center; padding-block: var(--s-7);">
+    <div style="width: 90px; margin: 0 auto var(--s-4); color: var(--moss);">
+      <Ink name="bird" width={90} />
+    </div>
+    <h1 class="page-head__title">Trang này đã bay đi</h1>
+    <p class="page-head__lede" style="margin-inline: auto;">
+      Không có bài thơ nào ở địa chỉ này. Có thể đường dẫn cũ đã đổi.
+    </p>
+    <p style="margin-top: var(--s-5);">
+      <a href={`${BASE}/tho/`} style="font-size: var(--step--1); letter-spacing: 0.08em; text-transform: uppercase;">
+        Về kho thơ
+      </a>
+    </p>
+  </div>
+</Base>

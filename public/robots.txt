@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://thokieuoanh.com/sitemap-index.xml

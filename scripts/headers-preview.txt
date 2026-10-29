@@ -1,0 +1,28 @@
+# Header cho BẢN XEM TRƯỚC qua Tailscale (dist-tho).
+# Khác với _headers của bản thật: ở đây KHÔNG cache lâu.
+#
+# Lý do: bản xem trước được build lại liên tục trong lúc sửa. Nếu file JS
+# bị gắn `immutable, max-age=31536000` thì Safari trên iPhone sẽ giữ bản
+# cũ suốt một năm và không bao giờ hỏi lại server — sửa gì cũng không thấy,
+# triệu chứng giống hệt "nút hỏng" dù mã trên server đã đúng.
+#
+# Bản deploy Cloudflare thật dùng public/_headers (cache dài) — ở đó tên
+# file có hash nội dung nên an toàn.
+
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin
+  Cache-Control: no-store, must-revalidate
+
+/_astro/*
+  Cache-Control: no-store, must-revalidate
+
+/fonts/*
+  Cache-Control: public, max-age=300
+
+/images/*
+  Cache-Control: public, max-age=300
+
+/pagefind/*
+  Cache-Control: no-store, must-revalidate

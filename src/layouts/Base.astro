@@ -1,0 +1,383 @@
+---
+import '../styles/global.css';
+import Ink from '../components/Ink.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+  current?: string;
+  ogType?: string;
+  ogImage?: string;
+  /** JSON-LD bổ sung cho trang (vd. Poem). Base tự thêm WebSite/Person. */
+  schema?: Record<string, unknown> | Record<string, unknown>[];
+}
+
+const {
+  title,
+  description = 'Thơ của Kiều Oanh — lưu giữ từng kỷ niệm.',
+  current = '',
+  ogType = 'website',
+  ogImage = '/images/og-default.jpg',
+  schema,
+} = Astro.props;
+
+const siteName = 'Kiều Oanh';
+// Nếu title đã chứa "Kiều Oanh" thì không nối thêm — tránh lặp tên
+// ("Thơ Kiều Oanh — lưu giữ… — Kiều Oanh").
+const pageTitle = !title
+  ? `${siteName} · Thơ`
+  : title.includes(siteName)
+    ? title
+    : `${title} — ${siteName}`;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+const siteUrl = (Astro.site ?? new URL('https://thokieuoanh.com')).origin;
+
+// Structured data — Person + WebSite có mặt trên mọi trang để Google
+// luôn biết đây là site thơ của Kiều Oanh, bất kể trang nào được index.
+const personSchema = {
+  '@type': 'Person',
+  '@id': `${siteUrl}/#person`,
+  name: 'Kiều Oanh',
+  alternateName: 'Thơ Kiều Oanh',
+  description: 'Tác giả thơ Việt Nam, viết về gia đình, quê nhà và bốn mùa.',
+  url: `${siteUrl}/`,
+  image: `${siteUrl}/images/kieuoanh-square.jpg`,
+};
+
+const websiteSchema = {
+  '@type': 'WebSite',
+  '@id': `${siteUrl}/#website`,
+  url: `${siteUrl}/`,
+  name: 'Thơ Kiều Oanh',
+  description: 'Những bài thơ của Kiều Oanh, lưu giữ từng kỷ niệm.',
+  inLanguage: 'vi',
+  publisher: { '@id': `${siteUrl}/#person` },
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: {
+      '@type': 'EntryPoint',
+      urlTemplate: `${siteUrl}/tho/?q={search_term_string}`,
+    },
+    'query-input': 'required name=search_term_string',
+  },
+};
+
+const extraSchema = schema ? (Array.isArray(schema) ? schema : [schema]) : [];
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [personSchema, websiteSchema, ...extraSchema],
+};
+
+
+const navItems = [
+  { href: `${BASE}/`, label: 'Trang chủ' },
+  { href: `${BASE}/tho/`, label: 'Thơ' },
+  { href: `${BASE}/chu-de/`, label: 'Chủ đề' },
+  { href: `${BASE}/gioi-thieu/`, label: 'Giới thiệu' },
+];
+---
+
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href={`${BASE}/favicon.svg`} type="image/svg+xml" />
+    <link rel="apple-touch-icon" href={`${BASE}/favicon.svg`} />
+
+    <meta property="og:type" content={ogType} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:site_name" content={siteName} />
+    <meta property="og:locale" content="vi_VN" />
+    <meta property="og:image" content={new URL(ogImage, Astro.site ?? Astro.url)} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Kiều Oanh" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content={new URL(ogImage, Astro.site ?? Astro.url)} />
+
+    <link rel="preload" href={`${BASE}/fonts/sourceserif-var.woff2`} as="font" type="font/woff2" crossorigin />
+
+    <link rel="alternate" type="application/rss+xml" title="Thơ Kiều Oanh" href={`${BASE}/rss.xml`} />
+
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="wrap site-header__inner">
+        <a href={`${BASE}/`} class="brand">
+          Kiều Oanh
+          <small>thơ</small>
+        </a>
+        <details class="menu" data-menu>
+          <summary class="menu__btn" aria-label="Mở menu">
+            <span class="menu__lines" aria-hidden="true">
+              <span></span>
+              <span></span>
+              <span></span>
+            </span>
+          </summary>
+          <nav class="nav" aria-label="Điều hướng chính">
+            {
+              navItems.map((item) => (
+                <a
+                  href={item.href}
+                  aria-current={
+                    (item.href === '/' ? current === '/' : current.startsWith(item.href.replace(/\/$/, '')))
+                      ? 'page'
+                      : undefined
+                  }
+                >
+                  {item.label}
+                </a>
+              ))
+            }
+            <button class="search-toggle" type="button" data-search-open aria-haspopup="dialog">
+              Tìm
+            </button>
+          </nav>
+        </details>
+      </div>
+    </header>
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap site-footer__inner">
+        <span>© {new Date().getFullYear()} Kiều Oanh</span>
+        <span>
+          <Ink name="branch" width={64} class="" aria-hidden={true} />
+        </span>
+        <button class="to-top" type="button" data-to-top aria-label="Lên đầu trang">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M8 13V3.5" />
+            <path d="M3.8 7.6 8 3.3l4.2 4.3" />
+          </svg>
+          <span>Lên đầu trang</span>
+        </button>
+      </div>
+    </footer>
+
+    <dialog class="search-dialog" data-search-dialog aria-label="Tìm bài thơ">
+      <div class="search-panel">
+        <div class="search-panel__bar">
+          <span aria-hidden="true" style="color: var(--ink-faint); font-size: 1.1rem;">⌕</span>
+          <input
+            type="search"
+            class="search-panel__input"
+            placeholder="Tìm theo tựa đề hoặc câu thơ…"
+            aria-label="Từ khoá tìm kiếm"
+            data-search-input
+          />
+          <button class="search-panel__close" type="button" data-search-close aria-label="Đóng">
+            ×
+          </button>
+        </div>
+        <p class="search-hint" data-search-hint>Gõ vài chữ để tìm trong kho thơ.</p>
+        <ul class="search-results" data-search-results></ul>
+      </div>
+    </dialog>
+
+    <script>
+      // ---- Menu điện thoại ----
+      const menu = document.querySelector<HTMLDetailsElement>('[data-menu]');
+      menu?.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        if (target.closest('a')) menu.open = false;
+      });
+      // Bấm ra ngoài hoặc nhấn Esc thì đóng menu
+      document.addEventListener('click', (e) => {
+        if (menu?.open && !menu.contains(e.target as Node)) menu.open = false;
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && menu?.open) {
+          menu.open = false;
+          menu.querySelector<HTMLElement>('summary')?.focus();
+        }
+      });
+
+      // ---- Pagefind search overlay ----
+      const dialog = document.querySelector<HTMLDialogElement>('[data-search-dialog]');
+      const input = document.querySelector<HTMLInputElement>('[data-search-input]');
+      const resultsEl = document.querySelector<HTMLUListElement>('[data-search-results]');
+      const hint = document.querySelector<HTMLElement>('[data-search-hint]');
+
+      let pagefind: any = null;
+      let loadFailed = false;
+
+      async function ensurePagefind() {
+        if (pagefind || loadFailed) return pagefind;
+        try {
+          // Served by Pagefind at build time; absent in dev.
+          // BASE cần thiết khi site chạy dưới một tiền tố (vd. /tho qua Tailscale).
+          const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
+          const mod = await import(/* @vite-ignore */ `${basePath}/pagefind/pagefind.js`);
+          await mod.options({ excerptLength: 28 });
+          pagefind = mod;
+        } catch {
+          loadFailed = true;
+        }
+        return pagefind;
+      }
+
+      function openSearch() {
+        if (!dialog) return;
+        dialog.showModal();
+        input?.focus();
+        ensurePagefind();
+      }
+
+      function closeSearch() {
+        dialog?.close();
+      }
+
+      document.querySelectorAll('[data-search-open]').forEach((btn) =>
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          openSearch();
+        })
+      );
+      document.querySelector('[data-search-close]')?.addEventListener('click', closeSearch);
+      dialog?.addEventListener('click', (e) => {
+        if (e.target === dialog) closeSearch();
+      });
+
+      let seq = 0;
+      input?.addEventListener('input', async () => {
+        const q = input.value.trim();
+        const mySeq = ++seq;
+        if (!resultsEl) return;
+
+        if (q.length < 2) {
+          resultsEl.innerHTML = '';
+          if (hint) {
+            hint.textContent = 'Gõ vài chữ để tìm trong kho thơ.';
+            hint.hidden = false;
+          }
+          return;
+        }
+
+        const pf = await ensurePagefind();
+        if (mySeq !== seq) return;
+
+        if (!pf) {
+          if (hint) {
+            hint.textContent = 'Tìm kiếm chỉ hoạt động trên bản đã build. Chạy npm run build rồi npm run preview.';
+            hint.hidden = false;
+          }
+          resultsEl.innerHTML = '';
+          return;
+        }
+
+        const search = await pf.search(q);
+        const items = await Promise.all(search.results.slice(0, 10).map((r: any) => r.data()));
+        if (mySeq !== seq) return;
+
+        if (hint) hint.hidden = true;
+        resultsEl.innerHTML = items
+          .map(
+            (item: any) => `
+            <li>
+              <a href="${item.url}">
+                <h3>${item.meta?.title ?? 'Không tựa'}</h3>
+                <p>${item.excerpt}</p>
+              </a>
+            </li>`
+          )
+          .join('');
+        if (!items.length && hint) {
+          hint.textContent = 'Không tìm thấy bài nào khớp.';
+          hint.hidden = false;
+        }
+      });
+
+      document.addEventListener('keydown', (e) => {
+        const tag = (e.target as HTMLElement)?.tagName;
+        if (e.key === '/' && tag !== 'INPUT' && tag !== 'TEXTAREA') {
+          e.preventDefault();
+          openSearch();
+        }
+      });
+
+      // ---- Lên đầu trang ----
+      const toTop = document.querySelector<HTMLButtonElement>('[data-to-top]');
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      toTop?.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
+        // đưa focus về đầu trang để người dùng bàn phím không bị kẹt ở footer
+        document.querySelector<HTMLElement>('a.brand')?.focus({ preventScroll: true });
+      });
+      // chỉ hiện nút khi đã cuộn được một quãng
+      if (toTop) {
+        const sync = () => {
+          toTop.hidden = window.scrollY < 320;
+        };
+        sync();
+        window.addEventListener('scroll', sync, { passive: true });
+      }
+
+      // ---- Chỉnh cỡ chữ bài thơ (A− / A+) ----
+      // Ba nấc: nhỏ / vừa / lớn. Mặc định "vừa" để CSS clamp tự lo,
+      // hai nấc kia ghi đè qua biến --poem-fs. Lưu vào localStorage
+      // để mở bài khác vẫn giữ cỡ đã chọn.
+      const FONT_KEY = 'ko-font-size';
+      // Giá trị tuyệt đối, không dùng em — em nhân vào var() dễ ra kết quả
+      // ngoài ý. Nhỏ 17px, vừa = '' (để clamp CSS tự lo), lớn 25px.
+      // Trên màn hẹp, nấc "lớn" tự co lại để câu thơ không gãy dòng —
+      // đó là toàn bộ lý do nút này tồn tại.
+      // Ba nấc phải CHÊNH NHAU RÕ mới thấy được. Trước đây nấc "lớn" trên
+      // màn hẹp là 20px, trong khi nấc "vừa" (clamp của CSS) đã ~20.5px —
+      // bấm A+ chỉ nhích 0.5px, nhìn như nút hỏng. Nay: 15 / 17.5 / 21px
+      // trên điện thoại, và 17 / 20.5 / 25px trên máy tính.
+      const narrow = window.matchMedia('(max-width: 40rem)').matches;
+      const FONT_SIZES = narrow ? ['15px', '17.5px', '21px'] : ['17px', '', '25px'];
+      const FONT_LABELS = ['nhỏ', 'vừa', 'lớn'];
+      const fontCtl = document.querySelector<HTMLElement>('[data-font-ctl]');
+      if (fontCtl) {
+        const body = document.querySelector<HTMLElement>('.poem-page__body');
+        const state = fontCtl.querySelector<HTMLElement>('[data-font-state]');
+        const buttons = fontCtl.querySelectorAll<HTMLButtonElement>('[data-font-step]');
+
+        let level = parseInt(localStorage.getItem(FONT_KEY) ?? '1', 10);
+        if (!(level >= 0 && level <= 2)) level = 1;
+
+        const apply = () => {
+          if (body) {
+            const v = FONT_SIZES[level];
+            if (v) body.style.setProperty('--poem-fs', v);
+            else body.style.removeProperty('--poem-fs');
+          }
+          if (state) state.textContent = FONT_LABELS[level];
+          buttons.forEach((b) => {
+            const step = Number(b.dataset.fontStep);
+            // chạm trần/sàn thì khoá nút tương ứng
+            b.disabled = (step < 0 && level === 0) || (step > 0 && level === 2);
+          });
+          localStorage.setItem(FONT_KEY, String(level));
+        };
+
+        buttons.forEach((b) => {
+          b.addEventListener('click', () => {
+            level = Math.max(0, Math.min(2, level + Number(b.dataset.fontStep)));
+            apply();
+          });
+        });
+
+        apply();
+      }
+
+    </script>
+  </body>
+</html>

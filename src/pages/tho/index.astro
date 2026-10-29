@@ -1,0 +1,122 @@
+---
+import Base from '../../layouts/Base.astro';
+import Ink from '../../components/Ink.astro';
+import { getPoems, collectTags, formatDate, tagSlug } from '../../lib/poems';
+
+const poems = await getPoems();
+const tags = collectTags(poems);
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+interface Item {
+  title: string;
+  url: string;
+  date: number;
+  tags: string[];
+}
+const items: Item[] = poems.map((p) => ({
+  title: p.data.title,
+  url: `${BASE}/tho/${p.id.replace(/\.(md|mdx)$/, '')}/`,
+  date: p.data.date.getTime(),
+  tags: p.data.tags.map(tagSlug),
+}));
+
+const years = [...new Set(poems.map((p) => p.data.date.getFullYear()))].sort((a, b) => b - a);
+---
+
+<Base
+  title="Kho thơ"
+  description={`Toàn bộ ${poems.length} bài thơ của Kiều Oanh, lọc theo chủ đề và năm sáng tác.`}
+  current="/tho/"
+>
+  <div class="wrap">
+    <header class="page-head">
+      <p class="eyebrow">Kho thơ</p>
+      <h1 class="page-head__title">{poems.length} bài</h1>
+      <p class="page-head__lede">
+        Xếp từ bài mới nhất. Chọn một chủ đề hoặc một năm để thu hẹp lại.
+      </p>
+    </header>
+
+    <div class="filters" role="group" aria-label="Lọc bài thơ">
+      <button class="filter-btn" type="button" data-filter="all" aria-pressed="true">Tất cả</button>
+      {
+        years.map((y) => (
+          <button class="filter-btn" type="button" data-filter={`year:${y}`} aria-pressed="false">
+            {y}
+          </button>
+        ))
+      }
+      {
+        tags.map((t) => (
+          <button class="filter-btn" type="button" data-filter={`tag:${t.slug}`} aria-pressed="false">
+            {t.name}
+          </button>
+        ))
+      }
+    </div>
+
+    <p class="count-line" data-count-line>Đang hiện {poems.length} bài</p>
+
+    {
+      poems.length === 0 ? (
+        <p style="font-style: italic; color: var(--ink-faint);">
+          Chưa có bài nào. Thêm file .md vào src/content/tho.
+        </p>
+      ) : (
+        <ul class="poem-grid" data-poem-list>
+          {poems.map((poem, i) => (
+            <li
+              class="poem-card reveal"
+              data-tags={poem.data.tags.map(tagSlug).join(' ')}
+              data-year={poem.data.date.getFullYear()}
+              style={`animation-delay:${Math.min(i, 6) * 45}ms`}
+            >
+              <a class="poem-card__link" href={`${BASE}/tho/${poem.id.replace(/\.(md|mdx)$/, '')}/`}>
+                <h2 class="poem-card__title">{poem.data.title}</h2>
+                <p class="poem-card__meta">{formatDate(poem.data.date)}</p>
+              </a>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+
+    <div class="rule-ornament" aria-hidden="true">
+      <Ink name="wave" width={160} />
+    </div>
+  </div>
+
+  <script>
+    const buttons = document.querySelectorAll<HTMLButtonElement>('[data-filter]');
+    const cards = document.querySelectorAll<HTMLLIElement>('[data-poem-list] > li');
+    const countLine = document.querySelector<HTMLElement>('[data-count-line]');
+    const total = cards.length;
+    let active = 'all';
+
+    function apply(filter: string) {
+      let shown = 0;
+      cards.forEach((card) => {
+        let match = true;
+        if (filter.startsWith('year:')) {
+          match = card.dataset.year === filter.slice(5);
+        } else if (filter.startsWith('tag:')) {
+          match = (card.dataset.tags ?? '').split(' ').includes(filter.slice(4));
+        }
+        card.classList.toggle('is-hidden', !match);
+        if (match) shown += 1;
+      });
+      if (countLine) {
+        countLine.textContent =
+          filter === 'all' ? `Đang hiện ${total} bài` : `Đang hiện ${shown} / ${total} bài`;
+      }
+    }
+
+    buttons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        active = btn.dataset.filter ?? 'all';
+        buttons.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+        apply(active);
+      });
+    });
+  </script>
+</Base>

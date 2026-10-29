@@ -1,0 +1,48 @@
+---
+import Base from '../../layouts/Base.astro';
+import PoemCard from '../../components/PoemCard.astro';
+import { getPoems, collectTags, tagSlug } from '../../lib/poems';
+
+export async function getStaticPaths() {
+  const poems = await getPoems();
+  return collectTags(poems).map((t) => ({
+    params: { tag: t.slug },
+    props: {
+      tagName: t.name,
+      count: t.count,
+      poems: poems.filter((p) => p.data.tags.some((x) => tagSlug(x) === t.slug)),
+    },
+  }));
+}
+
+const { tagName, count, poems } = Astro.props;
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+
+<Base
+  title={tagName}
+  description={`${count} bài thơ thuộc chủ đề ${tagName}.`}
+  current="/chu-de/"
+>
+  <div class="wrap">
+    <header class="page-head">
+      <p class="eyebrow">Chủ đề</p>
+      <h1 class="page-head__title">{tagName}</h1>
+      <p class="page-head__lede">{count} bài thơ cùng mạch.</p>
+    </header>
+
+    <ul class="poem-grid">
+      {
+        poems.map((poem, i) => (
+          <PoemCard poem={poem} delay={Math.min(i, 6) * 45} />
+        ))
+      }
+    </ul>
+
+    <p style="margin-top: var(--s-6);">
+      <a href={`${BASE}/chu-de/`} style="font-size: var(--step--1); letter-spacing: 0.06em;">
+        ← Tất cả chủ đề
+      </a>
+    </p>
+  </div>
+</Base>

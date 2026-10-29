@@ -1,0 +1,27 @@
+{
+  "name": "kieu-oanh-poetry",
+  "type": "module",
+  "version": "0.0.1",
+  "engines": {
+    "node": ">=22.23.4"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build && pagefind --site dist",
+    "preview": "astro preview",
+    "astro": "astro",
+    "import": "node scripts/import-poems.mjs",
+    "new": "node scripts/new-poem.mjs",
+    "deploy": "npm run build && wrangler pages deploy dist --project-name thokieuoanh",
+    "cf:preview": "npm run build && wrangler pages dev dist",
+    "build:tho": "PUBLIC_BASE=/tho astro build --outDir dist-tho && pagefind --site dist-tho && node scripts/fix-base-assets.mjs"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.4",
+    "astro": "^7.4.4",
+    "pagefind": "^1.5.2"
+  },
+  "devDependencies": {
+    "wrangler": "^4.155.0"
+  }
+}

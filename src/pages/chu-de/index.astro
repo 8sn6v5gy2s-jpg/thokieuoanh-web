@@ -1,0 +1,87 @@
+---
+import Base from '../../layouts/Base.astro';
+import Ink from '../../components/Ink.astro';
+import { getPoems, collectTags } from '../../lib/poems';
+
+const poems = await getPoems();
+const tags = collectTags(poems);
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+
+<Base
+  title="Chủ đề"
+  description="Các mạch thơ trong kho thơ của Kiều Oanh."
+  current="/chu-de/"
+>
+  <div class="wrap">
+    <header class="page-head">
+      <p class="eyebrow">Chủ đề</p>
+      <h1 class="page-head__title">Đọc theo mạch</h1>
+      <p class="page-head__lede">
+        {tags.length} chủ đề, xếp theo số bài nhiều nhất.
+      </p>
+    </header>
+
+    {
+      tags.length === 0 ? (
+        <p style="font-style: italic; color: var(--ink-faint);">
+          Chưa có chủ đề nào — thêm tag vào frontmatter của từng bài.
+        </p>
+      ) : (
+        <ul class="tag-index">
+          {tags.map((t) => (
+            <li>
+              <a href={`${BASE}/chu-de/${t.slug}/`}>
+                <span class="tag-index__name">{t.name}</span>
+                <span class="tag-index__count">{t.count} bài</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+
+    <div class="rule-ornament" aria-hidden="true">
+      <Ink name="bird" width={44} />
+    </div>
+  </div>
+</Base>
+
+<style>
+  .tag-index {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(16rem, 100%), 1fr));
+    gap: 0 2rem;
+    border-top: 1px solid var(--rule);
+  }
+  .tag-index li {
+    border-bottom: 1px solid var(--rule);
+  }
+  .tag-index a {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.05rem 0.25rem;
+    text-decoration: none;
+    color: var(--ink);
+    transition: color 140ms ease, padding-left 180ms ease;
+  }
+  .tag-index a:hover {
+    color: var(--moss-deep);
+    padding-left: 0.6rem;
+  }
+  .tag-index__name {
+    font-size: var(--step-1);
+    font-weight: 400;
+  }
+  .tag-index__count {
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+    font-variant-numeric: oldstyle-nums;
+    white-space: nowrap;
+  }
+</style>

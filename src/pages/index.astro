@@ -1,0 +1,143 @@
+---
+import Base from '../layouts/Base.astro';
+import Ink from '../components/Ink.astro';
+import PoemCard from '../components/PoemCard.astro';
+import { getPoems, slugOf, excerptOf, collectTags } from '../lib/poems';
+
+const poems = await getPoems();
+const tags = collectTags(poems).slice(0, 6);
+const featured = poems.find((p) => p.data.featured) ?? poems[0];
+const recent = poems.filter((p) => p !== featured).slice(0, 3);
+const total = poems.length;
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+
+<Base
+  current="/"
+  title="Thơ Kiều Oanh — lưu giữ từng kỷ niệm"
+  description={`Tuyển tập ${total} bài thơ của Kiều Oanh viết qua nhiều năm: thơ về gia đình, quê nhà, bốn mùa và những điều bình dị. Đọc thơ, tìm theo chủ đề, theo năm.`}
+>
+  <section class="hero wrap wrap--narrow">
+    <div class="hero__portrait">
+      <img
+        src={`${BASE}/images/kieuoanh-square.jpg`}
+        alt="Kiều Oanh"
+        width="900"
+        height="900"
+        loading="eager"
+        decoding="async"
+      />
+      <div class="hero__portrait-ring" aria-hidden="true"></div>
+    </div>
+
+    <h1 class="hero__title">Thơ Kiều Oanh</h1>
+    <p class="hero__tagline">Lưu giữ từng kỷ niệm.</p>
+  </section>
+
+  {
+    featured && (
+      <section class="wrap wrap--narrow" aria-labelledby="featured-label">
+        <article class="featured reveal">
+          <p class="featured__label" id="featured-label">
+            {poems.indexOf(featured) === 0 ? 'Bài mới' : 'Bài chọn'}
+          </p>
+          <h2 class="featured__title">{featured.data.title}</h2>
+          <p class="featured__excerpt">{excerptOf(featured)}</p>
+          <a class="featured__link" href={`${BASE}/tho/${slugOf(featured)}/`}>Đọc bài</a>
+        </article>
+      </section>
+    )
+  }
+
+  <div class="wrap wrap--narrow">
+    <div class="rule-ornament" aria-hidden="true">
+      <Ink name="flower" width={22} />
+    </div>
+  </div>
+
+  {
+    recent.length > 0 && (
+      <section class="wrap" aria-labelledby="recent-heading">
+        <p class="eyebrow">Mới nhất</p>
+        <h2 class="section-title" id="recent-heading">
+          Thơ gần đây
+        </h2>
+        <ul class="poem-grid">
+          {recent.map((poem, i) => (
+            <PoemCard poem={poem} delay={i * 60} />
+          ))}
+        </ul>
+        <p style="margin-top: var(--s-5);">
+          <a
+            href={`${BASE}/tho/`}
+            style="font-size: var(--step--1); letter-spacing: 0.08em; text-transform: uppercase; text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--moss) 45%, transparent); padding-bottom: 0.2em;"
+          >
+            Xem toàn bộ {total} bài
+          </a>
+        </p>
+      </section>
+    )
+  }
+
+  {
+    tags.length > 0 && (
+      <section class="wrap" aria-labelledby="tags-heading" style="margin-top: var(--s-7);">
+        <p class="eyebrow">Theo chủ đề</p>
+        <h2 class="section-title" id="tags-heading">
+          Đọc theo mạch
+        </h2>
+        <ul class="tag-list">
+          {tags.map((t) => (
+            <li>
+              <a class="tag" href={`${BASE}/chu-de/${t.slug}/`}>
+                {t.name} · {t.count}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+
+  <section class="wrap wrap--narrow" style="margin-top: var(--s-7);">
+    <div class="rule-ornament" aria-hidden="true">
+      <Ink name="branch" width={140} />
+    </div>
+    <p
+      style="text-align: center; font-style: italic; color: var(--ink-soft); max-width: 30rem; margin-inline: auto; line-height: 1.9;"
+    >
+      Cảm ơn bạn khi đã ghé qua trang thơ của Kiều Oanh giữa bộn bề cuộc sống,
+      mong bạn có những phút giây yên bình.
+    </p>
+    <p style="text-align: center; margin-top: var(--s-3);">
+      <a href={`${BASE}/gioi-thieu/`} style="font-size: var(--step--1); letter-spacing: 0.06em;">
+        Đôi điều về Kiều Oanh
+      </a>
+    </p>
+  </section>
+</Base>
+
+<style>
+  .hero__portrait {
+    position: relative;
+    width: clamp(112px, 17vw, 152px);
+    aspect-ratio: 1;
+    margin: 0 auto var(--s-4);
+  }
+  .hero__portrait img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    display: block;
+    filter: saturate(0.94) contrast(1.02);
+  }
+  /* vòng chỉ mảnh ngoài ảnh, lệch nhẹ cho có vẻ tay vẽ */
+  .hero__portrait-ring {
+    position: absolute;
+    inset: -7px;
+    border-radius: 50%;
+    border: 1px solid color-mix(in srgb, var(--moss) 32%, transparent);
+    transform: rotate(-1.2deg);
+  }
+</style>
