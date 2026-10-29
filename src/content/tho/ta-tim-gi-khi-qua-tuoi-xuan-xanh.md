@@ -13,4 +13,4 @@ Mặc khó khăn ta vẫn cứ yêu đời!
 Ta lặng nhìn theo ngày tháng dần trôi
 Nhẹ nhàng bỏ lại bao điều xưa cũ
 Đời vui vẻ là đời khi biết đủ
-Biết nằm,buông,biết làm chủ đời mình
+Biết nắm, buông, biết làm chủ đời mình

@@ -12,7 +12,7 @@ Thấy gió lạnh tràn về...
 
 Anh thấy không giữa bận rộn tứ bề
 Người ta vẫn có những phút giây chậm lại
-Ngẫm về hiện tại,hoạch định tương lai.
+Ngẫm về hiện tại, hoạch định tương lai.
 
 Em đã chuẩn bị cho mình một Tháng 12
 Thật dịu dàng và ấm áp
@@ -25,9 +25,9 @@ Có người vui vẻ,
 Dập dìu tay nắm tay nhau.
 
 Em nào ước gì đâu...
-Chỉ cần gia đình và tất cả mọi người luôn bình an,mạnh khoẻ...
+Chỉ cần gia đình và tất cả mọi người luôn bình an, mạnh khoẻ...
 Dù là già hay trẻ
-Cứng được an yên.
+Cũng được an yên.
 
 Người ta mặc định Hạnh phúc là phải có thật nhiều tiền
 Cũng đúng nhưng thật ra chưa đủ
@@ -40,6 +40,6 @@ Không ngậm ngùi tiếc nuối
 Hạnh phúc là khi sắp thêm một tuổi
 Sức khoẻ vẫn dẻo dai
 Chúng mình cùng tạm biệt Tháng 12
-Và hy vọng vào tương lại mới
+Và hy vọng vào tương lai mới
 2025 tới
 Hạnh phúc vẹn tròn hơn!

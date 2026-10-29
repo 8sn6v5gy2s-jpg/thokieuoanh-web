@@ -8,7 +8,7 @@ excerpt: ""
 Ngoài ngũ tuần rồi em ạ!
 Chẳng còn môi ướt má hồng
 Việc thì quên quên nhớ nhớ
-Mắt mờ,Tóc bạc,Da nhăn...
+Mắt mờ, Tóc bạc, Da nhăn...
 
 Ngoài ngũ tuần rồi em ạ
 Nhưng ai mà chẳng phải già
@@ -23,4 +23,4 @@ Tự nuông chiều lấy mình thôi!
 Như hôm nay là thứ bảy
 Tạm gác công việc lại nào
 Tự thưởng cuối tuần thư giãn
-Rồi mai làm tiếp,có sao!
+Rồi mai làm tiếp, có sao!

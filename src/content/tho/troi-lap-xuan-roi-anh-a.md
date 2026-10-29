@@ -21,13 +21,13 @@ Chúc mọi người luôn vui khoẻ
 Cho dù bất cứ nơi đâu.
 
 Còn chúng mình thì cứ thế
-Thương yêu,chia sẻ,cảm thông
+Thương yêu, chia sẻ, cảm thông
 Mỗi người nhường nhau một chút
 Sẽ vui trọn nghĩa vợ chồng.
 
 Đừng coi hôn nhân hệ trọng
 Cứ xem như một cuộc chơi
-Cùng ăn,cùng làm,cùng hưởng
+Cùng ăn, cùng làm, cùng hưởng
 Cùng vui đừng nghĩa bàn đời.
 
 Các con mỗi ngày một lớn

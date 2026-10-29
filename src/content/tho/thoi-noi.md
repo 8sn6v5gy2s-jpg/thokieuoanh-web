@@ -12,4 +12,4 @@ Thôi nôi vui vẻ cười tươi rạng ngời
 Mong con khoẻ mạnh, cuộc đời bình an
 
 Ngoan ngoãn, hiếu thảo, giỏi giang
-Tương lai sáng lạn, vững vàng bước đi
+Tương lai sáng lạng, vững vàng bước đi

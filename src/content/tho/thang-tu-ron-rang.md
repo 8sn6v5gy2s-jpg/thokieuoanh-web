@@ -11,6 +11,6 @@ Lũ ve sầu đang giấu mình tập hát
 Xuân đã xa dần...Hạ ngấp nghé ngoài hiên.
 
 Cảm ơn cuộc đời cho ta chữ Bình Yên
-Khi được sống trong hoà bình,tự do,độc lập
+Khi được sống trong hoà bình, tự do, độc lập
 Được hoà mình vào dòng đời tấp nập
 Và luôn có cho mình những giây phút an yên!

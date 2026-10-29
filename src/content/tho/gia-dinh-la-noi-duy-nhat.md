@@ -11,7 +11,7 @@ Hiểu nhau từng điều nhỏ nhặt
 Thật lời góp ý khen chê.
 
 Gia đình là nơi gắn kết
-Không ai có thể tách lia
+Không ai có thể tách lìa
 Giận hờn cũng không rời bỏ
 Muộn phiền sẽ được sẻ chia.
 
@@ -21,6 +21,6 @@ Bên ngoài gió mưa bão táp
 Về nhà trú ngụ yên vui.
 
 Gia đình mãi là điểm tựa
-Mỗi khi yếu đuối,bão lòng
+Mỗi khi yếu đuối, bão lòng
 Những lúc dại khờ lầm lỗi
 Trở về sẽ được bao dung!

@@ -15,7 +15,7 @@ Hắn nhìn mình tủm tỉm
 "Như bao ngày trong tháng
 Chứ nào có khác gì!"
 
-Vẻ mặt đầy đắc trí
+Vẻ mặt đầy đắc chí
 Thái độ kiểu bánh bơ
 Nguyệt vợ giả mật cái
 " Ngồi đấy mà mộng mơ!"
@@ -27,7 +27,7 @@ Nhẽ đi tặng trả xanh?
 
 Thôi kiểu gì cũng được
 Ai cũng sẽ có quà
-Vì phụ nữ vốn đĩ
+Vì phụ nữ vốn dĩ
 Đã là những bông hoa!
 
 Quà không cần rực rỡ
@@ -37,10 +37,10 @@ Yêu như những ngày thường.
 
 Cả nhà luôn mạnh khoẻ
 Vui vẻ và bình yên
-Con,cháu ngoan hiếu thảo
+Con, cháu ngoan hiếu thảo
 Không lo lắng ưu phiền.
 
 Và món quà khoái nhất
 Chẳng cần phải cầu kì
-Dựa cực tiền và quát:
+Đưa cục tiền và quát:
 " thích tiêu gì...tiêu đi!"

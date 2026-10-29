@@ -13,12 +13,12 @@ Nơi đó là GIA ĐÌNH.
 Nơi sẵn sàng đón mình
 Thành công hay thất bại
 Nơi mà ta chẳng ngại
-Dốc can cả ruột gan.
+Dốc cạn cả ruột gan.
 
 Nơi cho ta bình an
 Khi ngoài kia giông bão
 Nơi chẳng cần khách sáo
-Phải rào trước,đón sau.
+Phải rào trước, đón sau.
 
 Nơi cả nhà cùng nhau
 Rau cháo đều san sẻ

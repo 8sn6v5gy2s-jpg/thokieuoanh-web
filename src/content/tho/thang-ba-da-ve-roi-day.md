@@ -10,7 +10,7 @@ Ngoài kia chắc rét Nàng Bân
 Trong này nắng thay màu mới
 Hình như Xuân bước xa dần...
 
-Tháng Ba đã rồi đấy
+Tháng Ba đã về rồi đấy
 Bên thềm vương cánh hoa Mai
 Ngoài sân Hồng vừa hé nụ
 Vườn thơm hương Bưởi nồng nàn.

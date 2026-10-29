@@ -7,11 +7,11 @@ excerpt: ""
 
 Mỗi ngày phải đối mặt
 Đủ thứ chuyện trên đời
-Bao đắng ngọt,buồn vui
+Bao đắng ngọt, buồn vui
 Tháng ngày qua vội vã.
 
 Dù dòng đời vất vả
-Luôn phấn đấu,tự tin
+Luôn phấn đấu, tự tin
 Sức khoẻ chăm giữ gìn
 Tinh thần luôn sảng khoái.
 
