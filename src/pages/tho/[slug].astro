@@ -98,15 +98,30 @@ const poemSchema = {
     </nav>
 
     {/*
-      Nút "Đọc ngẫu nhiên" — nằm ngay trên "Về kho thơ".
-      Site là tĩnh nên chọn bài ở phía trình duyệt: danh sách slug được
-      nhúng sẵn, bấm thì bốc một bài, loại trừ bài đang đọc để lần nào
-      bấm cũng thật sự sang chỗ khác.
+      Hàng nút cuối bài: Chia sẻ đứng trước, Đọc ngẫu nhiên sau.
+      Đọc xong bài thì chia sẻ là ý tự nhiên hơn nhảy sang bài khác.
     */}
-    <p class="poem-draw">
+    <div class="poem-actions">
       <button
         type="button"
-        class="poem-draw__btn"
+        class="poem-action"
+        data-share
+        data-share-title={poem.data.title}
+        data-share-text={`${poem.data.title} — thơ Kiều Oanh`}
+        data-share-url={`${siteUrl}/tho/${slugOf(poem)}/`}
+      >
+        Chia sẻ
+      </button>
+
+      {/*
+        Nút "Đọc ngẫu nhiên" — nằm cạnh "Chia sẻ".
+        Site là tĩnh nên chọn bài ở phía trình duyệt: danh sách slug được
+        nhúng sẵn, bấm thì bốc một bài, loại trừ bài đang đọc để lần nào
+        bấm cũng thật sự sang chỗ khác.
+      */}
+      <button
+        type="button"
+        class="poem-action"
         data-draw
         data-draw-current={slugOf(poem)}
         data-draw-base={BASE}
@@ -114,7 +129,10 @@ const poemSchema = {
       >
         Đọc ngẫu nhiên
       </button>
-    </p>
+    </div>
+
+    {/* Thông báo nhỏ sau khi bấm Chia sẻ — trình đọc màn hình đọc lên. */}
+    <p class="poem-action__note" data-share-note aria-live="polite"></p>
 
     <p style="text-align: center; margin-top: var(--s-3);">
       <a href={`${BASE}/tho/`} style="font-size: var(--step--1); letter-spacing: 0.06em;">Về kho thơ</a>
@@ -179,12 +197,112 @@ const poemSchema = {
     outline: 2px solid var(--moss);
     outline-offset: 3px;
   }
+  /* Hàng nút cuối bài — Chia sẻ + Đọc ngẫu nhiên.
+     Kiểu chữ nhỏ, cùng tông, viền mảnh như dòng "Về kho thơ" để không
+     tranh chỗ với bài thơ. Cao 44px cho ngón tay. */
+  .poem-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--s-3);
+    margin-top: var(--s-5);
+  }
+  .poem-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 var(--s-4);
+    font: inherit;
+    font-size: var(--step--1);
+    letter-spacing: 0.06em;
+    color: var(--moss-deep);
+    background: transparent;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: border-color 200ms ease, background-color 200ms ease, color 200ms ease;
+  }
+  .poem-action:hover {
+    border-color: var(--moss);
+    background: color-mix(in srgb, var(--moss) 8%, transparent);
+  }
+  .poem-action:active {
+    transform: translateY(1px);
+  }
+  .poem-action:focus-visible {
+    outline: 2px solid var(--moss);
+    outline-offset: 3px;
+  }
+  .poem-action__note {
+    text-align: center;
+    font-size: var(--step--2, 0.78rem);
+    color: var(--ink-faint);
+    min-height: 1.4em;
+    margin-top: var(--s-2);
+    margin-bottom: 0;
+  }
   @media print {
-    .poem-draw { display: none; }
+    .poem-actions, .poem-action__note { display: none; }
   }
 </style>
 
 <script>
+  // ---- Chia sẻ ----
+  // Ưu tiên bảng chia sẻ của máy (Web Share API): trên điện thoại hiện
+  // thẳng Zalo, Messenger, Tin nhắn… Trình duyệt không hỗ trợ hoặc không
+  // phải thao tác người dùng thật (một số máy chặn) thì lùi về chép link.
+  document.querySelectorAll<HTMLButtonElement>('[data-share]').forEach((btn) => {
+    const note = document.querySelector<HTMLElement>('[data-share-note]');
+
+    const say = (msg: string) => {
+      if (note) note.textContent = msg;
+      window.setTimeout(() => {
+        if (note && note.textContent === msg) note.textContent = '';
+      }, 4000);
+    };
+
+    const copyFallback = async (url: string) => {
+      try {
+        if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(url);
+        } else {
+          // trình duyệt cũ: dùng ô nhập tạm
+          const t = document.createElement('textarea');
+          t.value = url;
+          t.setAttribute('readonly', '');
+          t.style.position = 'fixed';
+          t.style.opacity = '0';
+          document.body.appendChild(t);
+          t.select();
+          document.execCommand('copy');
+          document.body.removeChild(t);
+        }
+        say('Đã chép link bài thơ.');
+      } catch {
+        say('Không chép được. Bạn copy link trên thanh địa chỉ nhé.');
+      }
+    };
+
+    btn.addEventListener('click', async () => {
+      const url = btn.dataset.shareUrl || window.location.href;
+      const title = btn.dataset.shareTitle || document.title;
+      const text = btn.dataset.shareText || title;
+
+      if (navigator.share) {
+        try {
+          await navigator.share({ title, text, url });
+          return;
+        } catch (err) {
+          // người dùng bấm huỷ thì im lặng, không làm gì
+          if (err instanceof DOMException && err.name === 'AbortError') return;
+          // lỗi khác thì thử cách chép link
+        }
+      }
+      await copyFallback(url);
+    });
+  });
+
   // ---- Đọc ngẫu nhiên ----
   // Danh sách slug do Astro nhúng vào data-draw-slugs. Bốc một bài,
   // bỏ bài đang đọc; nếu chỉ còn đúng một bài (site một bài) thì thôi.
