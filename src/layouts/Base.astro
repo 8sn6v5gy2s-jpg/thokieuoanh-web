@@ -191,16 +191,24 @@ const navItems = [
 
     <script>
       // ---- Header tự ẩn khi cuộn xuống, hiện khi cuộn lên ----
-      // Quy tắc: cuộn xuống quá 8px thì ẩn; cuộn lên quá 8px thì hiện.
-      // Ngưỡng 8px tránh rung giật khi ngón tay rít nhẹ. Ở sát đầu trang
-      // luôn hiện, để mẹ không bị mất lối về trang chủ.
+      // Trên điện thoại, một cú vuốt chia thành hàng chục sự kiện scroll
+      // 2–6px mỗi lần. Nếu so từng bước với ngưỡng 8px thì không bước nào
+      // vượt ngưỡng và header đứng im — đó là lý do bản đầu "giật và không
+      // chính xác" trên mobile. Nay TÍCH LŨY quãng đường cùng chiều:
+      //   - cộng dồn khi cùng chiều, reset khi đổi chiều
+      //   - dồn được 12px cùng chiều thì mới đổi trạng thái
+      // Thanh địa chỉ Safari co giãn cũng tạo nhiễu vài px, ngưỡng 12px
+      // nuốt được nhiễu đó.
       (() => {
         const header = document.querySelector<HTMLElement>('.site-header');
         const spacer = document.querySelector<HTMLElement>('[data-header-spacer]');
         if (!header || !spacer) return;
 
         const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+        const THRESHOLD = 12;   // px dồn lại được mới đổi trạng thái
+        const TOP_ZONE = 120;   // sát đầu trang thì luôn hiện
         let lastY = window.scrollY;
+        let acc = 0;            // quãng đường dồn theo chiều hiện tại
         let stuck = false;
         let ticking = false;
 
@@ -217,27 +225,44 @@ const navItems = [
           spacer.style.blockSize = on ? `${baseH}px` : '';
         };
 
+        const setOff = (on: boolean) => {
+          header.classList.toggle('is-offscreen', on);
+        };
+
         const update = () => {
-          const y = window.scrollY;
+          const y = Math.max(0, window.scrollY);
           const dy = y - lastY;
-          const headerH = header.offsetHeight;
 
           // qua khỏi header gốc thì mới tách ra thành thanh nổi
-          setStuck(y > headerH + 24);
+          setStuck(y > baseH + 24);
 
-          if (stuck) {
-            if (reduced.matches) {
-              // giảm chuyển động: chỉ ẩn/hiện tức thời, vẫn giữ hành vi
-              header.classList.toggle('is-offscreen', dy > 8);
-            } else if (y < 120) {
-              header.classList.remove('is-offscreen');
-            } else if (dy > 8) {
-              header.classList.add('is-offscreen');
-            } else if (dy < -8) {
-              header.classList.remove('is-offscreen');
-            }
-          } else {
-            header.classList.remove('is-offscreen');
+          if (!stuck) {
+            setOff(false);
+            acc = 0;
+            lastY = y;
+            ticking = false;
+            return;
+          }
+
+          if (y < TOP_ZONE) {
+            // về gần đầu trang: luôn hiện, xóa luôn quãng đã dồn
+            setOff(false);
+            acc = 0;
+            lastY = y;
+            ticking = false;
+            return;
+          }
+
+          // đổi chiều thì bắt đầu đếm lại — mục đích là tính MỘT cú vuốt
+          if ((dy > 0 && acc < 0) || (dy < 0 && acc > 0)) acc = 0;
+          acc += dy;
+
+          if (acc >= THRESHOLD) {
+            setOff(true);            // cuộn xuống đủ xa -> giấu header
+            acc = 0;                 // đã xử lý xong cú vuốt này
+          } else if (acc <= -THRESHOLD) {
+            setOff(false);           // cuộn lên đủ xa -> hiện header
+            acc = 0;
           }
 
           lastY = y;
@@ -247,7 +272,8 @@ const navItems = [
         const onScroll = () => {
           if (ticking) return;
           ticking = true;
-          requestAnimationFrame(update);
+          if (reduced.matches) update();          // máy tắt hiệu ứng: xử lý ngay
+          else requestAnimationFrame(update);
         };
 
         window.addEventListener('scroll', onScroll, { passive: true });
