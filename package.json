@@ -12,6 +12,7 @@
     "astro": "astro",
     "import": "node scripts/import-poems.mjs",
     "new": "node scripts/new-poem.mjs",
+    "index": "node scripts/list-poems.mjs",
     "deploy": "npm run build && wrangler pages deploy dist --project-name thokieuoanh",
     "cf:preview": "npm run build && wrangler pages dev dist",
     "build:tho": "PUBLIC_BASE=/tho astro build --outDir dist-tho && pagefind --site dist-tho && node scripts/fix-base-assets.mjs"
