@@ -6,8 +6,16 @@ import { getPoems, slugOf, excerptOf, collectTags } from '../lib/poems';
 
 const poems = await getPoems();
 const tags = collectTags(poems).slice(0, 6);
-const featured = poems.find((p) => p.data.featured) ?? poems[0];
-const recent = poems.filter((p) => p !== featured).slice(0, 3);
+
+// Ba bài "Bài chọn": ưu tiên bài có featured: true, rồi bù bài mới nhất.
+// Không trùng nhau, không trùng với danh sách "Mới nhất" bên dưới.
+const featuredPoems = poems.filter((p) => p.data.featured);
+const picks = [
+  ...featuredPoems,
+  ...poems.filter((p) => !p.data.featured),
+].slice(0, 3);
+
+const recent = poems.filter((p) => !picks.includes(p)).slice(0, 3);
 const total = poems.length;
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
@@ -35,16 +43,46 @@ const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
   </section>
 
   {
-    featured && (
+    picks.length > 0 && (
       <section class="wrap wrap--narrow" aria-labelledby="featured-label">
-        <article class="featured reveal">
-          <p class="featured__label" id="featured-label">
-            {poems.indexOf(featured) === 0 ? 'Bài mới' : 'Bài chọn'}
-          </p>
-          <h2 class="featured__title">{featured.data.title}</h2>
-          <p class="featured__excerpt">{excerptOf(featured)}</p>
-          <a class="featured__link" href={`${BASE}/tho/${slugOf(featured)}/`}>Đọc bài</a>
-        </article>
+        <p class="featured__label" id="featured-label">
+          Bài chọn
+        </p>
+
+        {/*
+          Băng chuyền vô tận: danh sách bài được nhân ba bản (A B C A B C A B C).
+          Khởi đầu ở bản giữa, trượt tới cuối bản giữa thì nhảy không hiệu ứng
+          về đầu bản giữa — mắt không thấy mối nối vì nội dung hai chỗ giống nhau.
+          Chuyển động bằng transform nên chạy trên GPU, không giật.
+          Tắt JS vẫn đọc được: có thanh trượt ngang và nút trước/sau.
+        */}
+        <div class="picks" data-picks>
+          <div class="picks__viewport">
+            <ul class="picks__track" data-picks-track>
+              {[...picks, ...picks, ...picks].map((poem, i) => (
+                <li class="picks__slide" data-picks-slide aria-hidden={i < picks.length || i >= picks.length * 2 ? 'true' : undefined}>
+                  <article class="featured">
+                    <h2 class="featured__title">{poem.data.title}</h2>
+                    <p class="featured__excerpt">{excerptOf(poem)}</p>
+                    <a class="featured__link" href={`${BASE}/tho/${slugOf(poem)}/`}>
+                      Đọc bài
+                    </a>
+                  </article>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div class="picks__ctl">
+            <button type="button" class="picks__arrow" data-picks-prev aria-label="Bài trước">
+              ←
+            </button>
+            <span class="picks__dots" data-picks-dots aria-hidden="true"></span>
+            <button type="button" class="picks__arrow" data-picks-next aria-label="Bài sau">
+              →
+            </button>
+          </div>
+        </div>
       </section>
     )
   }
@@ -140,4 +178,256 @@ const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
     border: 1px solid color-mix(in srgb, var(--moss) 32%, transparent);
     transform: rotate(-1.2deg);
   }
+
+  /* ---------- Bài chọn: băng chuyền vô tận ---------- */
+  .picks {
+    --gap: clamp(1rem, 3vw, 1.75rem);
+    position: relative;
+  }
+  .picks__viewport {
+    overflow: hidden;
+    /* chừa chỗ cho bóng đổ nhẹ hai bên, và cho viền khung không bị cắt */
+    padding-block: 2px;
+    /* mép mờ dần hai bên để slide không bị cắt phũ */
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      #000 6%,
+      #000 94%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      #000 6%,
+      #000 94%,
+      transparent 100%
+    );
+  }
+  .picks__track {
+    display: flex;
+    gap: var(--gap);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    will-change: transform;
+    transform: translate3d(0, 0, 0);
+  }
+  .picks__slide {
+    flex: 0 0 100%;
+    min-width: 0;
+  }
+  /* khung bài — giữ nguyên tông của .featured cũ */
+  .picks__slide .featured {
+    height: 100%;
+  }
+
+  .picks__ctl {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--s-4);
+    margin-top: var(--s-5);
+  }
+  .picks__arrow {
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font: inherit;
+    font-size: 1rem;
+    line-height: 1;
+    color: var(--moss-deep);
+    background: transparent;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: border-color 200ms ease, background-color 200ms ease, transform 200ms ease;
+  }
+  .picks__arrow:hover {
+    border-color: var(--moss);
+    background: color-mix(in srgb, var(--moss) 8%, transparent);
+  }
+  .picks__arrow:active {
+    transform: scale(0.96);
+  }
+  .picks__arrow:focus-visible {
+    outline: 2px solid var(--moss);
+    outline-offset: 3px;
+  }
+  .picks__arrow[disabled] {
+    opacity: 0.35;
+    cursor: default;
+  }
+
+  /* chấm chỉ vị trí — chỉ để nhìn, không bấm */
+  .picks__dots {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .picks__dot {
+    /* phải là inline-block: <span> rỗng mặc định là inline nên width/height
+       bị bỏ qua và chấm co về 0px — đúng lỗi đã gặp khi chấm không hiện. */
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--ink-faint) 75%, transparent);
+    transition: background-color 300ms ease, transform 300ms ease;
+  }
+  .picks__dot.is-active {
+    background: var(--moss-deep);
+    transform: scale(1.4);
+  }
+
+  /* tắt JS: băng vẫn cuộn ngang được bằng tay */
+  .picks:not([data-ready]) .picks__viewport {
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+  .picks:not([data-ready]) .picks__slide {
+    scroll-snap-align: center;
+  }
+  .picks:not([data-ready]) .picks__ctl {
+    display: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .picks__track {
+      transition: none !important;
+    }
+  }
 </style>
+
+<script>
+  // ---- Bài chọn: băng chuyền vô tận ----
+  // Track gồm 3 bản giống nhau (A B C A B C A B C). Ta đứng ở bản giữa
+  // (index 3..5). Trượt sang phải hết bản giữa thì nhảy KHÔNG hiệu ứng
+  // về index 0, và ngược lại — vì nội dung lặp lại nên mắt không thấy.
+  (() => {
+    const root = document.querySelector<HTMLElement>('[data-picks]');
+    if (!root) return;
+
+    const track = root.querySelector<HTMLElement>('[data-picks-track]');
+    const vp = root.querySelector<HTMLElement>('.picks__viewport');
+    const prevBtn = root.querySelector<HTMLButtonElement>('[data-picks-prev]');
+    const nextBtn = root.querySelector<HTMLButtonElement>('[data-picks-next]');
+    const dotsBox = root.querySelector<HTMLElement>('[data-picks-dots]');
+    const slides = [...root.querySelectorAll<HTMLElement>('[data-picks-slide]')];
+    if (!track || !vp || !prevBtn || !nextBtn || slides.length === 0) return;
+
+    const perSet = slides.length / 3;      // số bài thật
+    if (!Number.isInteger(perSet) || perSet < 2) return; // 1 bài thì chẳng cần chạy
+
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let index = perSet;                    // bắt đầu ở bản giữa
+    let animating = false;
+    let timer: number | undefined;
+
+    // chấm vị trí
+    const dots: HTMLElement[] = [];
+    if (dotsBox) {
+      // Astro gắn [data-astro-cid-*] vào HTML lúc build để scoping CSS.
+      // Phần tử do JS tạo ra KHÔNG có attribute đó nên CSS .picks__dot
+      // không áp vào và chấm co về 0px. Sao chép attribute từ khung cha.
+      const cid = [...dotsBox.attributes]
+        .map((a) => a.name)
+        .find((n) => n.startsWith('data-astro-cid-'));
+      for (let i = 0; i < perSet; i++) {
+        const d = document.createElement('span');
+        d.className = 'picks__dot';
+        if (cid) d.setAttribute(cid, '');
+        dotsBox.appendChild(d);
+        dots.push(d);
+      }
+    }
+
+    const stepWidth = () => {
+      const s = slides[0].getBoundingClientRect().width;
+      const gap = parseFloat(getComputedStyle(track).columnGap || '0') || 0;
+      return s + gap;
+    };
+
+    const apply = (animate: boolean) => {
+      track.style.transition = animate && !reduced.matches
+        ? 'transform 620ms cubic-bezier(0.22, 0.61, 0.36, 1)'
+        : 'none';
+      track.style.transform = `translate3d(${-index * stepWidth()}px, 0, 0)`;
+    };
+
+    const paint = () => {
+      const active = index % perSet;
+      dots.forEach((d, i) => d.classList.toggle('is-active', i === active));
+      // chỉ slide đang xem được đọc bởi trình đọc màn hình và nhận Tab
+      slides.forEach((s, i) => {
+        s.setAttribute('aria-hidden', i === index ? 'false' : 'true');
+        s.querySelectorAll<HTMLElement>('a, button').forEach((el) => {
+          if (i === index) el.removeAttribute('tabindex');
+          else el.setAttribute('tabindex', '-1');
+        });
+      });
+    };
+
+    const go = (dir: 1 | -1) => {
+      if (animating) return;
+      animating = true;
+      index += dir;
+      apply(true);
+      paint();
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        // đã sang hẳn tới mép bản giữa -> nhảy không hiệu ứng về giữa
+        if (index >= perSet * 2) {
+          index -= perSet;
+          apply(false);
+        } else if (index < perSet) {
+          index += perSet;
+          apply(false);
+        }
+        animating = false;
+      }, reduced.matches ? 0 : 660);
+    };
+
+    nextBtn.addEventListener('click', () => go(1));
+    prevBtn.addEventListener('click', () => go(-1));
+
+    // bàn phím: mũi tên trái/phải khi đang ở trong vùng bài chọn
+    root.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight') { e.preventDefault(); go(1); }
+      else if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1); }
+    });
+
+    // vuốt trên điện thoại
+    let startX = 0;
+    let startY = 0;
+    let swiping = false;
+    vp.addEventListener('touchstart', (e) => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      swiping = true;
+    }, { passive: true });
+    vp.addEventListener('touchend', (e) => {
+      if (!swiping) return;
+      swiping = false;
+      const dx = e.changedTouches[0].clientX - startX;
+      const dy = e.changedTouches[0].clientY - startY;
+      // vuốt dọc rõ ràng thì thôi, để trang tự cuộn
+      if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
+      go(dx < 0 ? 1 : -1);
+    }, { passive: true });
+
+    // đổi khổ màn thì tính lại khoảng cách
+    let resizeTimer: number | undefined;
+    window.addEventListener('resize', () => {
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => apply(false), 120);
+    }, { passive: true });
+
+    root.setAttribute('data-ready', '');
+    apply(false);
+    paint();
+  })();
+</script>
