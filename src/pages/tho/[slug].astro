@@ -11,17 +11,19 @@ import {
 
 export async function getStaticPaths() {
   const poems = await getPoems();
+  const allSlugs = poems.map((p) => slugOf(p));
   return poems.map((poem, i) => ({
     params: { slug: slugOf(poem) },
     props: {
       poem,
       prev: poems[i + 1] ?? null,
       next: poems[i - 1] ?? null,
+      allSlugs,
     },
   }));
 }
 
-const { poem, prev, next } = Astro.props;
+const { poem, prev, next, allSlugs } = Astro.props;
 const body = (poem.body ?? '').trim();
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
 const siteUrl = (Astro.site ?? new URL('https://thokieuoanh.com')).origin;
@@ -95,7 +97,26 @@ const poemSchema = {
       {next ? <a href={`${BASE}/tho/${slugOf(next)}/`}>{next.data.title} →</a> : <span></span>}
     </nav>
 
-    <p style="text-align: center; margin-top: var(--s-5);">
+    {/*
+      Nút "Đọc ngẫu nhiên" — nằm ngay trên "Về kho thơ".
+      Site là tĩnh nên chọn bài ở phía trình duyệt: danh sách slug được
+      nhúng sẵn, bấm thì bốc một bài, loại trừ bài đang đọc để lần nào
+      bấm cũng thật sự sang chỗ khác.
+    */}
+    <p class="poem-draw">
+      <button
+        type="button"
+        class="poem-draw__btn"
+        data-draw
+        data-draw-current={slugOf(poem)}
+        data-draw-base={BASE}
+        data-draw-slugs={JSON.stringify(allSlugs)}
+      >
+        Đọc ngẫu nhiên
+      </button>
+    </p>
+
+    <p style="text-align: center; margin-top: var(--s-3);">
       <a href={`${BASE}/tho/`} style="font-size: var(--step--1); letter-spacing: 0.06em;">Về kho thơ</a>
     </p>
   </article>
@@ -123,4 +144,67 @@ const poemSchema = {
   .poem-nav a:hover {
     color: var(--moss-deep);
   }
+
+  /* Nút Đọc ngẫu nhiên — kiểu chữ nhỏ, nhẹ, cùng tông với dòng "Về kho thơ"
+     để không tranh chỗ với bài thơ. Vẫn đủ 44px để ngón tay bấm dễ. */
+  .poem-draw {
+    text-align: center;
+    margin-top: var(--s-5);
+    margin-bottom: 0;
+  }
+  .poem-draw__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 var(--s-4);
+    font: inherit;
+    font-size: var(--step--1);
+    letter-spacing: 0.06em;
+    color: var(--moss-deep);
+    background: transparent;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: border-color 200ms ease, background-color 200ms ease, color 200ms ease;
+  }
+  .poem-draw__btn:hover {
+    border-color: var(--moss);
+    background: color-mix(in srgb, var(--moss) 8%, transparent);
+  }
+  .poem-draw__btn:active {
+    transform: translateY(1px);
+  }
+  .poem-draw__btn:focus-visible {
+    outline: 2px solid var(--moss);
+    outline-offset: 3px;
+  }
+  @media print {
+    .poem-draw { display: none; }
+  }
 </style>
+
+<script>
+  // ---- Đọc ngẫu nhiên ----
+  // Danh sách slug do Astro nhúng vào data-draw-slugs. Bốc một bài,
+  // bỏ bài đang đọc; nếu chỉ còn đúng một bài (site một bài) thì thôi.
+  document.querySelectorAll<HTMLButtonElement>('[data-draw]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      let slugs: string[] = [];
+      try {
+        slugs = JSON.parse(btn.dataset.drawSlugs || '[]');
+      } catch {
+        slugs = [];
+      }
+      if (slugs.length < 2) return;
+
+      const current = btn.dataset.drawCurrent || '';
+      const base = btn.dataset.drawBase || '';
+      const pool = slugs.filter((s) => s !== current);
+      const pick = pool[Math.floor(Math.random() * pool.length)];
+      if (!pick) return;
+
+      window.location.href = `${base}/tho/${pick}/`;
+    });
+  });
+</script>
