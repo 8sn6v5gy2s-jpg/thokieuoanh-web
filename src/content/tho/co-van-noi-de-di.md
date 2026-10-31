@@ -2,6 +2,7 @@
 title: "Có vạn nơi để đi"
 date: 2025-06-28
 tags: [Gia đình, Quê nhà]
+featured: true
 excerpt: ""
 ---
 

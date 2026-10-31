@@ -2,6 +2,7 @@
 title: "Giữa bộn bề cuộc sống"
 date: 2025-03-25
 tags: [Bình yên, Đời thường]
+featured: true
 excerpt: ""
 ---
 
