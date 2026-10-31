@@ -13,6 +13,9 @@ node_modules/
 # wrangler (cache, state cục bộ)
 .wrangler/
 
+# impeccable — thư mục làm việc cục bộ (báo cáo critique), không cần lên repo
+.impeccable/
+
 # logs
 npm-debug.log*
 yarn-debug.log*

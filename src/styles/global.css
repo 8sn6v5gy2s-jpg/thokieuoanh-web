@@ -43,13 +43,13 @@
   --paper-edge:   #EFE8D8;
   --ink:          #2B2620;
   --ink-soft:     #5C5347;
-  --ink-faint:    #7A7062;
+  --ink-faint:    #6E6455;
   --rule:         #DED4BF;
 
   /* Accents — muted, garden-ish */
   --moss:         #5C7355;
   --moss-deep:    #44553F;
-  --clay:         #B07B5C;
+  --clay:         #9A6446;
 
   /* Type */
   --serif: 'Source Serif', Georgia, 'Times New Roman', serif;
@@ -267,6 +267,8 @@ main { flex: 1; }
   align-items: baseline;
 }
 .site-footer a { color: var(--ink-faint); }
+/* lời cảm ơn chuyển từ cuối trang chủ xuống đây */
+.site-footer__note { color: var(--ink-soft); max-width: 34rem; }
 
 .to-top {
   display: inline-flex;
@@ -308,7 +310,7 @@ main { flex: 1; }
   max-width: 6rem;
   background: currentColor;
 }
-.rule-ornament svg { width: 22px; height: 22px; color: var(--moss); opacity: 0.75; }
+.rule-ornament svg { width: auto; height: auto; max-width: 100%; color: var(--moss); opacity: 0.75; }
 
 /* ---------- Section headings ---------- */
 .eyebrow {
@@ -364,9 +366,9 @@ main { flex: 1; }
 .poem-card__meta {
   margin-top: var(--s-2);
   font-size: 0.82rem;
-  letter-spacing: 0.06em;
+  /* chữ thường, không giãn chữ: "MƯỜI" ở dạng in hoa + tracking đọc thành nhiễu */
+  letter-spacing: normal;
   color: var(--ink-faint);
-  text-transform: uppercase;
 }
 
 /* ---------- Tags ---------- */

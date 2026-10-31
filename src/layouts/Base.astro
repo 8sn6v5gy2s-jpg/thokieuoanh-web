@@ -157,7 +157,9 @@ const navItems = [
 
     <footer class="site-footer">
       <div class="wrap site-footer__inner">
-        <span>© {new Date().getFullYear()} Kiều Oanh</span>
+        <span class="site-footer__note">
+          Cảm ơn bạn đã ghé qua giữa bộn bề cuộc sống. © {new Date().getFullYear()} Kiều Oanh
+        </span>
         <span>
           <Ink name="branch" width={64} class="" aria-hidden={true} />
         </span>
@@ -369,13 +371,20 @@ const navItems = [
         ensurePagefind();
       }
 
+      // Giữ lại nơi đã mở để trả focus về đó khi đóng — nếu không, người
+      // dùng bàn phím mất chỗ trong menu và phải Tab lại từ đầu trang.
+      let searchTrigger: HTMLElement | null = null;
+
       function closeSearch() {
         dialog?.close();
+        searchTrigger?.focus();
+        searchTrigger = null;
       }
 
       document.querySelectorAll('[data-search-open]').forEach((btn) =>
         btn.addEventListener('click', (e) => {
           e.preventDefault();
+          searchTrigger = btn as HTMLElement;
           openSearch();
         })
       );
@@ -404,7 +413,7 @@ const navItems = [
 
         if (!pf) {
           if (hint) {
-            hint.textContent = 'Tìm kiếm chỉ hoạt động trên bản đã build. Chạy npm run build rồi npm run preview.';
+            hint.textContent = 'Tìm kiếm đang tạm gián đoạn. Bạn có thể xem toàn bộ thơ ở mục Thơ.';
             hint.hidden = false;
           }
           resultsEl.innerHTML = '';
