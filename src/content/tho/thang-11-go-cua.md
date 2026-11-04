@@ -10,13 +10,13 @@ Nồng nàn hương hoa sữa
 Bên lối nhỏ đợi chờ
 Trời bắt đầu se lạnh
 Gió cũng dặt dìu đưa
-Sương phủ mờ trắng xóa
+Sương phủ mờ trắng xoá
 Trong cái tiết giao mùa
 Bên hiên nhà chú Cún
 Đang vờn em Miu con
 Lắc lư đuôi ngúng nguẩy
 Mắt long lanh xoe tròn
-Xuyến Chi xòe cánh mỏng
+Xuyến Chi xoe cánh mỏng
 Tinh khôi cả góc vườn
 Dã Quỳ vàng rực rỡ
 Như níu chân người thương
