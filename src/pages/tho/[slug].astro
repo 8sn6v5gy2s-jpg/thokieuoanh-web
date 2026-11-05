@@ -1,4 +1,5 @@
 ---
+import fs from 'node:fs';
 import Base from '../../layouts/Base.astro';
 import Ink from '../../components/Ink.astro';
 import {
@@ -26,6 +27,11 @@ export async function getStaticPaths() {
 const { poem, prev, next, allSlugs } = Astro.props;
 const body = (poem.body ?? '').trim();
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
+// Bài có tệp âm thanh thì hiện trình nghe. Không sửa frontmatter:
+// thả public/audio/<slug>.mp3 là có, không có tệp thì không hiện.
+const audioSrc = fs.existsSync(`public/audio/${slugOf(poem)}.mp3`)
+  ? `/audio/${slugOf(poem)}.mp3`
+  : null;
 const siteUrl = (Astro.site ?? new URL('https://thokieuoanh.pages.dev')).origin;
 const poemUrl = `${siteUrl}/tho/${slugOf(poem)}/`;
 
@@ -65,10 +71,37 @@ const poemSchema = {
         Cỡ đã chọn lưu vào localStorage nên mở bài khác vẫn giữ.
         Không hiện khi in (print) và không tính vào Pagefind.
       */}
-      <div class="font-ctl" data-font-ctl data-pagefind-ignore>
-        <button type="button" data-font-step="-1" aria-label="Chữ nhỏ hơn">A−</button>
-        <span class="font-ctl__state" data-font-state aria-live="polite">vừa</span>
-        <button type="button" data-font-step="1" aria-label="Chữ lớn hơn">A+</button>
+      <div class="poem-tools" data-pagefind-ignore>
+        <div class="font-ctl" data-font-ctl>
+          <button type="button" data-font-step="-1" aria-label="Chữ nhỏ hơn">A−</button>
+          <span class="font-ctl__state" data-font-state aria-live="polite">vừa</span>
+          <button type="button" data-font-step="1" aria-label="Chữ lớn hơn">A+</button>
+        </div>
+
+        {audioSrc && (
+          <div class="audio-ctl" data-audio>
+            <button type="button" class="audio-ctl__play" data-audio-toggle
+                    aria-label="Nghe bài thơ" aria-pressed="false">
+              <svg class="audio-ctl__icon audio-ctl__icon--play" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                <path d="M4 2.6v10.8L13.4 8 4 2.6z" fill="currentColor" />
+              </svg>
+              <svg class="audio-ctl__icon audio-ctl__icon--pause" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                <rect x="3.4" y="2.6" width="3.2" height="10.8" rx="1" fill="currentColor" />
+                <rect x="9.4" y="2.6" width="3.2" height="10.8" rx="1" fill="currentColor" />
+              </svg>
+            </button>
+
+            <input class="audio-ctl__seek" data-audio-seek type="range"
+                   min="0" max="100" value="0" step="0.1" aria-label="Tiến trình bài đọc" />
+
+            <span class="audio-ctl__time" data-audio-time>0:00</span>
+
+            <button type="button" class="audio-ctl__rate" data-audio-rate data-rate="1"
+                    aria-label="Tốc độ đọc: 1 lần">1×</button>
+
+            <audio data-audio-el preload="metadata" src={`${BASE}${audioSrc}`}></audio>
+          </div>
+        )}
       </div>
     </header>
 
@@ -141,6 +174,133 @@ const poemSchema = {
 </Base>
 
 <style>
+  /* Hàng công cụ: cỡ chữ + trình nghe, một dòng, canh giữa. */
+  .poem-tools {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--s-2);
+    margin-top: var(--s-3);
+  }
+  .poem-tools .font-ctl { margin-top: 0; }
+
+  /* Trình nghe — cùng kiểu "viên thuốc" với .font-ctl */
+  .audio-ctl {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.1rem;
+    padding: 0.15rem;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    background: var(--paper-soft);
+    flex: 0 1 auto;
+    min-width: 0;
+    transition: border-color 0.2s ease;
+  }
+  .audio-ctl.is-playing { border-color: color-mix(in srgb, var(--moss) 45%, var(--rule)); }
+  .audio-ctl__play {
+    display: grid;
+    place-items: center;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: none;
+    color: var(--ink-faint);
+    cursor: pointer;
+    flex: 0 0 auto;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .audio-ctl__play:hover { background: var(--paper-edge); color: var(--moss-deep); }
+  .audio-ctl__play:focus-visible { outline: 2px solid var(--moss); outline-offset: 2px; }
+  /* Trạng thái quyết định biểu tượng: chỉ một cái hiện, đọc từ aria-pressed.
+     Cả hai SVG đều display:none cho tới khi trạng thái bật một cái, nên
+     không quy tắc nào để cả hai cùng hiện. */
+  .audio-ctl__play svg { display: none; width: 19.5px; height: 19.5px; }
+  .audio-ctl__play[aria-pressed="false"] .audio-ctl__icon--play { display: block; }
+  .audio-ctl__play[aria-pressed="true"]  .audio-ctl__icon--pause { display: block; }
+
+  /* Thanh tiến trình — mảnh, tô moss, núm chỉ hiện khi rê/kéo */
+  .audio-ctl__seek {
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    flex: 1 1 auto;
+    min-width: 64px;
+    width: clamp(64px, 22vw, 150px);
+    height: 44px;
+    margin: 0 0.1rem;
+    cursor: pointer;
+  }
+  .audio-ctl__seek::-webkit-slider-runnable-track {
+    height: 2px;
+    border-radius: 2px;
+    background: linear-gradient(to right, var(--moss) var(--p, 0%), var(--rule) var(--p, 0%));
+  }
+  .audio-ctl__seek::-moz-range-track { height: 2px; border-radius: 2px; background: var(--rule); }
+  .audio-ctl__seek::-moz-range-progress { height: 2px; border-radius: 2px; background: var(--moss); }
+  .audio-ctl__seek::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 11px;
+    height: 11px;
+    margin-top: -4.5px;
+    border-radius: 50%;
+    background: var(--moss);
+    border: 0;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+  .audio-ctl__seek::-moz-range-thumb {
+    width: 11px;
+    height: 11px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--moss);
+    opacity: 0;
+  }
+  .audio-ctl:hover .audio-ctl__seek::-webkit-slider-thumb,
+  .audio-ctl__seek:focus-visible::-webkit-slider-thumb { opacity: 1; }
+  .audio-ctl:hover .audio-ctl__seek::-moz-range-thumb,
+  .audio-ctl__seek:focus-visible::-moz-range-thumb { opacity: 1; }
+  .audio-ctl__seek:focus-visible { outline: 2px solid var(--moss); outline-offset: 2px; border-radius: 999px; }
+
+  .audio-ctl__time {
+    font-family: var(--sans);
+    font-size: 0.7rem;
+    letter-spacing: 0.02em;
+    color: var(--ink-faint);
+    font-variant-numeric: tabular-nums;
+    min-width: 2.6em;
+    text-align: center;
+  }
+  .audio-ctl__rate {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 0.35rem;
+    border: 0;
+    border-radius: 999px;
+    background: none;
+    font-family: var(--sans);
+    font-size: 0.7rem;
+    letter-spacing: 0.02em;
+    color: var(--ink-faint);
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .audio-ctl__rate:hover { background: var(--paper-edge); color: var(--moss-deep); }
+  .audio-ctl__rate:focus-visible { outline: 2px solid var(--moss); outline-offset: 2px; }
+  .audio-ctl__rate[data-rate="1.25"] { color: var(--moss-deep); }
+
+  @media (max-width: 26rem) {
+    .poem-tools { gap: 0.4rem; }
+    .audio-ctl__time { display: none; }
+    .audio-ctl__seek { min-width: 44px; width: clamp(44px, 18vw, 110px); }
+    .audio-ctl__rate { min-width: 40px; padding: 0 0.25rem; }
+  }
+
   .poem-nav {
     display: flex;
     justify-content: space-between;
@@ -243,7 +403,7 @@ const poemSchema = {
     margin-bottom: 0;
   }
   @media print {
-    .poem-actions, .poem-action__note { display: none; }
+    .poem-actions, .poem-action__note, .audio-ctl { display: none; }
   }
 </style>
 
@@ -324,5 +484,85 @@ const poemSchema = {
 
       window.location.href = `${base}/tho/${pick}/`;
     });
+  });
+
+  // ---- Trình nghe ----
+  // Nút đổi biểu tượng theo aria-pressed; tốc độ lưu theo máy như cỡ chữ.
+  document.querySelectorAll<HTMLElement>('[data-audio]').forEach((box) => {
+    const el = box.querySelector<HTMLAudioElement>('[data-audio-el]');
+    const btn = box.querySelector<HTMLButtonElement>('[data-audio-toggle]');
+    const seek = box.querySelector<HTMLInputElement>('[data-audio-seek]');
+    const time = box.querySelector<HTMLElement>('[data-audio-time]');
+    const rate = box.querySelector<HTMLButtonElement>('[data-audio-rate]');
+    if (!el || !btn || !seek || !time || !rate) return;
+
+    const rates = [1, 1.25];
+    let r = Number(localStorage.getItem('ko-audio-rate') || 1);
+    if (!rates.includes(r)) r = 1;
+
+    const mmss = (s: number) => {
+      if (!isFinite(s)) s = 0;
+      return Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+    };
+
+    const paintRate = () => {
+      el.playbackRate = r;
+      rate.dataset.rate = String(r);
+      rate.textContent = r + '×';
+      rate.setAttribute('aria-label', 'Tốc độ đọc: ' + (r === 1 ? '1 lần' : '1,25 lần') + '. Bấm để đổi.');
+    };
+
+    const paintProgress = () => {
+      const d = el.duration || 0;
+      seek.value = d ? String((el.currentTime / d) * 100) : '0';
+      seek.style.setProperty('--p', (d ? (el.currentTime / d) * 100 : 0) + '%');
+      time.textContent = mmss(el.currentTime);
+    };
+
+    btn.addEventListener('click', async () => {
+      if (el.paused) {
+        try {
+          await el.play();
+        } catch {
+          /* bị chặn thì thôi */
+        }
+      } else {
+        el.pause();
+      }
+    });
+    el.addEventListener('play', () => {
+      box.classList.add('is-playing');
+      btn.setAttribute('aria-pressed', 'true');
+      btn.setAttribute('aria-label', 'Tạm dừng bài đọc');
+    });
+    el.addEventListener('pause', () => {
+      box.classList.remove('is-playing');
+      btn.setAttribute('aria-pressed', 'false');
+      btn.setAttribute('aria-label', 'Nghe bài thơ');
+    });
+    el.addEventListener('timeupdate', paintProgress);
+    el.addEventListener('loadedmetadata', () => {
+      paintRate();
+      paintProgress();
+    });
+    el.addEventListener('ended', () => {
+      el.currentTime = 0;
+      paintProgress();
+    });
+    seek.addEventListener('input', () => {
+      const d = el.duration || 0;
+      if (!d) return;
+      el.currentTime = (Number(seek.value) / 100) * d;
+      seek.style.setProperty('--p', seek.value + '%');
+      time.textContent = mmss(el.currentTime);
+    });
+    rate.addEventListener('click', () => {
+      r = rates[(rates.indexOf(r) + 1) % rates.length];
+      localStorage.setItem('ko-audio-rate', String(r));
+      paintRate();
+    });
+    paintRate();
+    paintProgress();
+    window.addEventListener('pagehide', () => el.pause());
   });
 </script>
