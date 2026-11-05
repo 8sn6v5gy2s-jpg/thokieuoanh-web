@@ -99,7 +99,7 @@ const poemSchema = {
             <button type="button" class="audio-ctl__rate" data-audio-rate data-rate="1"
                     aria-label="Tốc độ đọc: 1 lần">1×</button>
 
-            <audio data-audio-el preload="metadata" src={`${BASE}${audioSrc}`}></audio>
+            <audio data-audio-el preload="none" src={`${BASE}${audioSrc}`}></audio>
           </div>
         )}
       </div>
@@ -215,6 +215,8 @@ const poemSchema = {
   }
   .audio-ctl__play:hover { background: var(--paper-edge); color: var(--moss-deep); }
   .audio-ctl__play:focus-visible { outline: 2px solid var(--moss); outline-offset: 2px; }
+  /* Đang tải trọn tệp trước khi phát (iOS cần 206, Pages không trả) */
+  .audio-ctl__play[aria-busy="true"] { opacity: 0.55; cursor: progress; }
   /* Trạng thái quyết định biểu tượng: chỉ một cái hiện, đọc từ aria-pressed.
      Cả hai SVG đều display:none cho tới khi trạng thái bật một cái, nên
      không quy tắc nào để cả hai cùng hiện. */
@@ -500,6 +502,38 @@ const poemSchema = {
     let r = Number(localStorage.getItem('ko-audio-rate') || 1);
     if (!rates.includes(r)) r = 1;
 
+    // Cloudflare Pages trả 200 cho Range, không có 206. iOS Safari cần 206 để
+    // phát và tua, nên tải trọn tệp rồi phát từ blob: lúc đó tua là chuyện
+    // nội bộ của máy. Tải hỏng thì quay lại phát thẳng từ URL gốc.
+    const nativeSrc = el.getAttribute('src') || '';
+    let blobUrl: string | null = null;
+    let loading: Promise<void> | null = null;
+
+    const loadWhole = () => {
+      if (!loading) {
+        loading = (async () => {
+          btn.setAttribute('aria-busy', 'true');
+          try {
+            const res = await fetch(nativeSrc, { cache: 'force-cache' });
+            if (!res.ok) throw new Error(String(res.status));
+            blobUrl = URL.createObjectURL(await res.blob());
+            el.src = blobUrl as string;
+            el.load();
+            await new Promise<void>((resolve) => {
+              if (el.readyState >= 1) return resolve();
+              el.addEventListener('loadedmetadata', () => resolve(), { once: true });
+              el.addEventListener('error', () => resolve(), { once: true });
+            });
+          } catch {
+            /* để nguyên src gốc */
+          } finally {
+            btn.removeAttribute('aria-busy');
+          }
+        })();
+      }
+      return loading;
+    };
+
     const mmss = (s: number) => {
       if (!isFinite(s)) s = 0;
       return Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
@@ -521,6 +555,7 @@ const poemSchema = {
 
     btn.addEventListener('click', async () => {
       if (el.paused) {
+        await loadWhole();
         try {
           await el.play();
         } catch {
@@ -563,6 +598,9 @@ const poemSchema = {
     });
     paintRate();
     paintProgress();
-    window.addEventListener('pagehide', () => el.pause());
+    window.addEventListener('pagehide', () => {
+      el.pause();
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
+    });
   });
 </script>
